@@ -1,0 +1,35 @@
+# Manifest — correct MIME + cache
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type  = "application/manifest+json"
+    Cache-Control = "public, max-age=3600"
+
+# Service worker — বেশি সময় cache হবে না
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Service-Worker-Allowed = "/"
+
+# Icons — long cache
+[[headers]]
+  for = "/icon192.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/icon512.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/apple-touch-icon.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# HTML — short cache
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

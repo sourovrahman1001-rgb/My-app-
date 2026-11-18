@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Simple Exam App by SOUROV</title>
+
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#2563eb">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon512.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/icon192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Simple Exam App">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+
+<style>
+  body.dark-mode { background-color: #121212 !important; color: #ffffff !important; }
+  body.dark-mode div:not(.modal-content):not(.chart-container) { background-color: #1e1e1e !important; color: #ffffff !important; border-color: #333 !important; }
+  body.dark-mode p, body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode span, body.dark-mode small, body.dark-mode b { color: #ffffff !important; }
+  body.dark-mode button:not(.no-dark) { background-color: #333 !important; color: #ffffff !important; border: 1px solid #555 !important; }
+  body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background-color: #2d2d2d !important; color: #ffffff !important; border-color: #444 !important; }
+  body.dark-mode a { color: #60a5fa !important; }
+  body.dark-mode .notice-container { background-color: #2d2d2d !important; color: #f59e0b !important; }
+  
+  /* চ্যাট স্টাইল */
+  .chat-container { display: flex; flex-direction: column; height: 65vh; background: #f8f9ff; border-radius: 12px; overflow: hidden; border: 1px solid #ddd; }
+  .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .msg-bubble { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
+  .msg-user { align-self: flex-end; background: #2563eb; color: white; border-bottom-right-radius: 2px; }
+  .msg-admin { align-self: flex-start; background: #e2e8f0; color: #333; border-bottom-left-radius: 2px; }
+  body.dark-mode .msg-admin { background: #334155; color: white; }
+  .chat-input-area { display: flex; gap: 8px; padding: 10px; background: white; border-top: 1px solid #ddd; }
+  body.dark-mode .chat-input-area { background: #1e1e1e; border-color: #444; }
+  
+  .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+  .admin-btn { padding: 12px 5px; border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 14px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+  .page-screen { display: none; }
+  .active-page { display: block; }
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+  .modal-content { background: white; padding: 20px; border-radius: 20px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
+  .notice-container { background: #fef08a; padding: 12px; border-radius: 12px; margin-bottom: 12px; border-left: 5px solid #d97706; max-height: 100px; overflow-y: auto; white-space: pre-wrap; color: #b45309; font-weight: bold; font-size: 14px;}
+  .search-box { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); padding:12px 20px; border-radius:8px; z-index:9999; color:#fff; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,.25); max-width:90%; text-align:center; animation:toastIn .3s ease; }
+  @keyframes toastIn { from { bottom:-50px; opacity:0; } to { bottom:20px; opacity:1; } }
+</style>
+</head>
+<body style="font-family:sans-serif;background:#eef2ff;padding:0;margin:0;min-height:100vh">
+
+<div style="background:#2563eb;padding:16px 12px 20px;text-align:center;color:white;border-radius:0 0 20px 20px; position: relative;">
+  <div style="position: absolute; left: 15px; top: 15px;">
+    <button onclick="toggleLanguage()" class="no-dark" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 50%; font-size: 18px; cursor: pointer;">🌐</button>
+  </div>
+  <div style="position: absolute; right: 15px; top: 15px;">
+    <button onclick="toggleTheme()" class="no-dark" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 50%; font-size: 18px; cursor: pointer;">🌙</button>
+  </div>
+  <h1 id="headerTitle" style="margin:0;font-size:28px" data-bn="সিম্পল এক্সাম অ্যাপ" data-en="Simple Exam App">সিম্পল এক্সাম অ্যাপ</h1>
+  <p id="headerSub" style="margin:4px 0 0;opacity:.9;font-size:14px" data-bn="বাই সৌরভ • কুইজ তৈরি করুন" data-en="By SOUROV • Create a quiz">বাই সৌরভ • কুইজ তৈরি করুন</p>
+</div>
+
+<div style="max-width:520px;margin:auto;padding:12px">
+
+<div id="noticeBoard" class="notice-container" style="display:none;"><span id="noticeText"></span></div>
+
+<!-- ================= HOME SCREEN ================= -->
+<div id="homeScreen" class="page-screen active-page">
+  <div style="background:#0f3d2e;padding:24px 16px;border-radius:20px;text-align:center;color:white">
+    <div style="font-size:50px">📗</div>
+    <h2 style="font-size:26px;margin:10px 0 4px" data-bn="আমার অ্যাপে স্বাগতম" data-en="Welcome to My App">আমার অ্যাপে স্বাগতম</h2>
+    <p style="opacity:.8;margin:0">— Sourov R.</p>
+    <button onclick="goToUserPage()" style="margin-top:16px;padding:12px 22px;border:none;border-radius:12px;background:#2563eb;color:white;font-weight:bold;font-size:17px" data-bn="পরীক্ষা দিতে যান" data-en="Go to Exam">পরীক্ষা দিতে যান</button>
+  </div>
+
+  <div style="background:white;padding:18px;border-radius:20px;margin-top:14px">
+    <h2 style="margin:0 0 12px" data-bn="আমার মেনু" data-en="My Exam Menu">আমার মেনু</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <button onclick="goToUserPage()" style="padding:12px 14px;border:none;border-radius:12px;background:#3b82f6;color:white;font-weight:bold;flex:1 1 45%" data-bn="👨‍🎓 ইউজার" data-en="👨‍🎓 USER">👨‍🎓 ইউজার</button>
+      <button onclick="goToAdminLoginPage()" style="padding:12px 14px;border:none;border-radius:12px;background:#ef4444;color:white;font-weight:bold;flex:1 1 45%" data-bn="🔐 অ্যাডমিন" data-en="🔐 ADMIN">🔐 অ্যাডমিন</button>
+      <button onclick="showLeaderboardPage()" style="padding:12px 14px;border:none;border-radius:12px;background:#f59e0b;color:white;font-weight:bold;flex:1 1 45%" data-bn="🏆 লিডারবোর্ড" data-en="🏆 Leaderboard">🏆 লিডারবোর্ড</button>
+      <button onclick="showProfilePage()" style="padding:12px 14px;border:none;border-radius:12px;background:#0ea5e9;color:white;font-weight:bold;flex:1 1 45%" data-bn="👤 প্রোফাইল" data-en="👤 My Profile">👤 প্রোফাইল</button>
+      <button onclick="showBookmarksPage()" style="padding:12px 14px;border:none;border-radius:12px;background:#8b5cf6;color:white;font-weight:bold;flex:1 1 45%" data-bn="🔖 বুকমার্ক" data-en="🔖 Bookmarks">🔖 বুকমার্ক</button>
+      <button onclick="showNotesPage()" style="padding:12px 14px;border:none;border-radius:12px;background:#14b8a6;color:white;font-weight:bold;flex:1 1 45%" data-bn="📚 স্টাডি নোটস" data-en="📚 Study Notes">📚 স্টাডি নোটস</button>
+      <button onclick="showMistakePage()" style="padding:12px 14px;border:none;border-radius:12px;background:#10b981;color:white;font-weight:bold;flex:1 1 45%" data-bn="📕 ভুলের খাতা" data-en="📕 Mistake Book">📕 ভুলের খাতা</button>
+      <button onclick="showDashboardPage()" style="padding:12px 14px;border:none;border-radius:12px;background:#f43f5e;color:white;font-weight:bold;flex:1 1 45%" data-bn="📊 ড্যাশবোর্ড" data-en="📊 Dashboard">📊 ড্যাশবোর্ড</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= USER REGISTRATION ================= -->
+<div id="registerScreen" class="page-screen">
+  <button onclick="goHome()" style="padding:8px 12px;border:1px solid #eee;border-radius:12px;background:#f8f9ff;margin-bottom:15px" data-bn="⬅️ ফিরে যান" data-en="⬅️ Back">⬅️ ফিরে যান</button>
+  <h2 style="text-align:center" data-bn="নতুন রেজিস্ট্রেশন" data-en="New Registration">নতুন রেজিস্ট্রেশন</h2>
+  <div style="background:white;padding:20px;border-radius:20px;">
+    <input id="regName" placeholder="তোমার নাম লিখো" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;" data-bn-placeholder="তোমার নাম লিখো" data-en-placeholder="Enter your name">
+    <input id="regCode" placeholder="ইউনিক কোড" maxlength="20" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;" data-bn-placeholder="ইউনিক কোড" data-en-placeholder="Unique Code">
+    <select id="regClass" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+      <option value="SSC">SSC</option><option value="HSC">HSC</option>
+    </select>
+    <select id="regGroup" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+      <option value="Science" data-bn="বিজ্ঞান" data-en="Science">বিজ্ঞান</option>
+      <option value="Arts" data-bn="মানবিক" data-en="Arts">মানবিক</option>
+    </select>
+    <button onclick="registerUser()" style="width:100%;padding:13px;margin-top:10px;border:none;border-radius:12px;background:#28a745;color:white;font-weight:bold" data-bn="রেজিস্ট্রেশন করুন ✅" data-en="Register ✅">রেজিস্ট্রেশন করুন ✅</button>
+    <p id="regMsg" style="text-align:center;color:red;font-weight:bold;margin-top:10px"></p>
+  </div>
+</div>
+
+<!-- ================= USER DASHBOARD ================= -->
+<div id="userScreen" class="page-screen">
+  <button onclick="goHome()" style="padding:8px 12px;border:1px solid #eee;border-radius:12px;background:#f8f9ff;margin-bottom:15px" data-bn="⬅️ ফিরে যান" data-en="⬅️ Back">⬅️ ফিরে যান</button>
+  <div id="resumeBanner" style="display:none; background:#fef08a; padding:15px; border-radius:12px; margin-bottom:15px; text-align:center; border:1px solid #f59e0b;">
+    <p style="margin:0 0 10px; font-weight:bold; color:#b45309;">আপনি একটি পরীক্ষা অসম্পূর্ণ রেখেছেন!</p>
+    <button onclick="resumeExam()" style="padding:10px 20px; background:#f59e0b; color:white; border:none; border-radius:8px; font-weight:bold; margin-right:5px;">Resume</button>
+    <button onclick="clearResume()" style="padding:10px 20px; background:#ccc; color:#333; border:none; border-radius:8px; font-weight:bold;">Clear</button>
+  </div>
+  <div id="welcomeName" style="text-align:center; font-weight:bold; color:#28a745; font-size:18px; margin-bottom:15px;"></div>
+  <h3 style="text-align:center" data-bn="কোন সাবজেক্টে পরীক্ষা দিবা?" data-en="Which subject do you want to test?">কোন সাবজেক্টে পরীক্ষা দিবা?</h3>
+  <button onclick="showMixedSetup()" style="width:100%;padding:15px;margin-bottom:10px;border:none;border-radius:12px;background:#f59e0b;color:white;font-weight:bold;font-size:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);" data-bn="🎲 মিশ্র পরীক্ষা (Mixed Exam)" data-en="🎲 Mixed Exam">🎲 মিশ্র পরীক্ষা (Mixed Exam)</button>
+  <div id="subjectListContainer"></div>
+  <div style="display:flex; gap:5px; margin-top:15px;">
+    <button onclick="showSuggestModal()" style="flex:1;padding:13px;border:1px dashed #4a00e0;border-radius:12px;background:#f4e8ff;color:#4a00e0;font-weight:bold" data-bn="💡 প্রশ্ন সাজেশন দিন" data-en="💡 Suggest Question">💡 প্রশ্ন সাজেশন দিন</button>
+    <button onclick="showUserChat()" style="flex:1;padding:13px;border:1px dashed #0ea5e9;border-radius:12px;background:#e0f2fe;color:#0284c7;font-weight:bold" data-bn="💬 এডমিনের সাথে চ্যাট" data-en="💬 Chat Admin">💬 এডমিনের সাথে চ্যাট</button>
+  </div>
+</div>
+
+<!-- ================= USER CHAT SCREEN ================= -->
+<div id="userChatScreen" class="page-screen">
+  <button onclick="goToUserPage()" style="padding:8px 12px;border:1px solid #eee;border-radius:12px;background:#f8f9ff;margin-bottom:15px" data-bn="⬅️ ফিরে যান" data-en="⬅️ Back">⬅️ ফিরে যান</button>
+  <h3 style="text-align:center;color:#0ea5e9;margin-bottom:15px;">💬 এডমিনের সাথে চ্যাট</h3>
+  <div class="chat-container">
+    <div id="userChatMessages" class="chat-messages"></div>
+    <div class="chat-input-area">
+      <input id="userChatInput" type="text" placeholder="মেসেজ লিখুন..." style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;">
+      <button onclick="sendUserChatMessage()" style="padding:10px 20px;background:#0ea5e9;color:white;border:none;border-radius:8px;font-weight:bold;">পাঠান</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= INSTRUCTIONS SCREEN ================= -->
+<div id="instructionsScreen" class="page-screen">
+  <div style="background:white; padding:20px; border-radius:20px; margin-top:20px; text-align:center;">
+    <h2 style="color:#4a00e0; margin-top:0;">পরীক্ষার নির্দেশনা</h2>
+    <div id="instDetails" style="text-align:left; margin-bottom:20px; background:#f8f9ff; padding:15px; border-radius:12px; border:1px solid #eee;"></div>
+    <button onclick="startExamFromInstructions()" style="width:100%;padding:13px;border:none;border-radius:12px;background:#28a745;color:white;font-weight:bold;font-size:16px;">পরীক্ষা শুরু করুন 🚀</button>
+    <button onclick="goToUserPage()" style="width:100%;padding:13px;margin-top:10px;border:1px solid #eee;border-radius:12px;background:#f8f9ff;font-weight:bold;">বাতিল করুন</button>
+  </div>
+</div>
+
+<!-- ================= EXAM SCREEN ================= -->
+<div id="examScreen" class="page-screen">
+  <button onclick="confirmExitExam()" style="padding:8px 12px;border:1px solid #eee;border-radius:12px;background:#f8f9ff" data-bn="⬅️ বের হয়ে যাও" data-en="⬅️ Exit">⬅️ বের হয়ে যাও</button>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+    <h2 id="examTitle" style="text-align:left;color:#4a00e0; margin:0;"></h2>
+    <button id="bookmarkBtn" onclick="toggleBookmark()" style="background:none; border:none; font-size:24px; cursor:pointer;">🔖</button>
+  </div>
+  <div id="timer" style="font-size:19px;font-weight:bold;text-align:center;color:#2ed573;background:#e8fff0;padding:8px;border-radius:12px; margin-top:10px;">⏰ সময়</div>
+  <div style="height:8px;background:#eee;border-radius:10px;overflow:hidden;margin:10px 0"><div id="bar" style="height:100%;background:#667eea;width:0%"></div></div>
+  <h2 id="question"></h2>
+  <div id="questionImageBox" style="text-align:center; margin-bottom:10px;"></div>
+  <div id="options"></div>
+  <p id="result" style="font-weight:bold;text-align:center"></p>
+  <div id="explanationBox" style="display:none; background:#e3f2fd; padding:12px; border-radius:12px; margin-bottom:10px; border-left: 4px solid #2196f3;">
+    <b data-bn="ব্যাখ্যা:" data-en="Explanation:">ব্যাখ্যা:</b> <span id="explanationText" style="font-size:14px;"></span>
+  </div>
+  <div id="skipReportBox" style="display:none; gap:8px; margin-top:10px;">
+    <button id="skipBtn" onclick="skipQ()" style="flex:1;padding:12px;border:none;border-radius:12px;background:#f59e0b;color:white;font-weight:bold">⏭️ স্কিপ</button>
+    <button id="reportBtn" onclick="reportQ()" style="flex:1;padding:12px;border:none;border-radius:12px;background:#ef4444;color:white;font-weight:bold">🚩 রিপোর্ট</button>
+  </div>
+  <div style="display:flex; gap:8px; margin-top:10px;">
+    <button id="prevBtn" onclick="prevQ()" style="display:none; width:50%; padding:13px; border:none; border-radius:12px; background:#64748b; color:white; font-weight:bold;">⬅️ Previous</button>
+    <button id="next" onclick="nextQ()" style="display:none; width:50%; padding:13px; border:none; border-radius:12px; background:#007bff; color:white; font-weight:bold;">Next ➡️</button>
+  </div>
+  <button id="reviewBtn" onclick="showReviewPage()" style="display:none;width:100%;padding:13px;margin-top:10px;border:none;border-radius:12px;background:#10b981;color:white;font-weight:bold">রিভিউ এবং সাবমিট ✅</button>
+  <div id="resultActions" style="display:none; margin-top:15px;">
+    <button onclick="downloadResultImage()" style="width:100%;padding:13px;margin-bottom:10px;border:none;border-radius:12px;background:#8b5cf6;color:white;font-weight:bold;">📸 রেজাল্ট ডাউনলোড</button>
+  </div>
+  <div id="scoreContainer" style="background:white; padding:10px; border-radius:12px;">
+    <p id="score" style="font-weight:bold;text-align:center;color:#4a00e0;font-size:19px;margin:15px 0;"></p>
+    <p id="timeTakenText" style="text-align:center; color:#666; font-size:14px; display:none;"></p>
+  </div>
+  <button id="backBtn" onclick="goToUserPage()" style="display:none;width:100%;padding:13px;border:1px solid #eee;border-radius:12px;background:#f8f9ff">⬅️ সাবজেক্টে ফিরে যাও</button>
+</div>
+
+<!-- ================= REVIEW SCREEN ================= -->
+<div id="reviewScreen" class="page-screen">
+  <h2 style="text-align:center;color:#4a00e0">পরীক্ষা রিভিউ</h2>
+  <div id="reviewList" style="margin-bottom:15px; max-height: 400px; overflow-y: auto;"></div>
+  <button onclick="submitFinalExam()" style="width:100%;padding:13px;border:none;border-radius:12px;background:#28a745;color:white;font-weight:bold;font-size:16px">চূড়ান্ত সাবমিট করুন 🚀</button>
+</div>
+
+<!-- ================= PROFILE SCREEN ================= -->
+<div id="profileScreen" class="page-screen">
+  <button onclick="goHome()" style="padding:8px 12px;border:1px solid #eee;border-radius:12px;background:#f8f9ff;margin-bottom:15px">⬅️ ফিরে যান</button>
+  <h2 style="text-align:center;color:#4a00e0">👤 আমার প্রোফাইল</h2>
+  <div style="text-align:center; margin-bottom:20px;">
+    <div style="position:relative; display:inline-block;">
+      <img id="profPicImg" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid #0ea5e9; display:none; margin-bottom:10px;">
+      <div id="profPicPlaceholder" style="font-size:60px; line-height:1; margin-bottom:10px;">👨‍🎓</div>
+      <label for="profPicUpload" style="position:absolute; bottom:10px; right:-10px; background:#0ea5e9; color:white; padding:5px 8px; border-radius:50%; cursor:pointer; font-size:12px;">📷</label>
+      <input type="file" id="profPicUpload" accept="image/*" style="display:none;" onchange="uploadProfilePic(event)">
+    </div>
+    <div id="profViewMode">
+      <h3 id="profName" style="margin:5px 0; color:#0ea5e9;"></h3>
+      <p id="profCode" style="margin:0; font-weight:bold; color:#666;"></p>
+      <p id="profGroup" style="margin:5px 0; font-weight:bold; color:#f59e0b;"></p>
+      <p id="profStreak" style="margin:5px 0; font-weight:bold; color:#ef4444; display:none;"></p>
+      <button onclick="toggleEditProfile()" style="padding:5px 15px;margin-top:10px;border:none;border-radius:8px;background:#3b82f6;color:white;font-size:12px">এডিট করুন</button>
+    </div>
+    <div id="profEditMode" style="display:none; text-align:left; background:#f8f9ff; padding:15px; border-radius:12px; margin-top:10px;">
+      <input id="editName" placeholder="Name" style="width:100%;padding:10px;margin-bottom:5px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+      <input id="editCode" placeholder="Code" style="width:100%;padding:10px;margin-bottom:5px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+      <select id="editClass" style="width:100%;padding:10px;margin-bottom:5px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+        <option value="SSC">SSC</option><option value="HSC">HSC</option>
+      </select>
+      <select id="editGroup" style="width:100%;padding:10px;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+        <option value="Science">Science</option><option value="Arts">Arts</option>
+      </select>
+      <button onclick="saveProfileEdit()" style="width:100%;padding:10px;border:none;border-radius:8px;background:#28a745;color:white;font-weight:bold">সেভ করুন</button>
+      <button onclick="toggleEditProfile()" style="width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px;background:#ccc;color:#333;font-weight:bold">বাতিল</button>
+    </div>
+  </div>
+  <div id="profStats"></div>
+  <div id="profSubjectStats" style="margin-top:20px;"></div>
+  <div id="profRecentExams" style="margin-top:20px;"></div>
+</div>
+
+<!-- ================= LEADERBOARD SCREEN ================= -->
+<div id="leaderboardScreen" class="page-screen">
+  <button onclick="goHome()" style="padding:8px 12px;border:1px solid #eee;border-radius:12px;background:#f8f9ff;margin-bottom:15px">⬅️ ফিরে যান</button>
+  <h2 style="text-align:center">🏆 লিডারবোর্ড</h2>
+  <div style="display:flex; gap:5px; margin-bottom:10px;">
+    <select id="ldrClassFilter" onchange="window.loadLeaderboardFn()" style="width:50%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+      <option value="HSC">HSC</option><option value="SSC">SSC</option>
+    </select>
+    <select id="ldrGroupFilter" onchange="window.loadLeaderboardFn()" style="width:50%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+      <option value="Science">Science</option><option value="Arts">Arts</option>
+    </select>
+  </div>
+  <select id="leaderboardFilter" onchange="window.loadLeaderboardFn()" style="width:100%;padding:10px;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+    <option value="all">All Time (সর্বকালের)</option>
+    <option value="week">This Week (এই সপ্তাহ)</option>
+    <option value="month">This Month (এই মাস)</option>
+  </select>
+  <div id="ldrList">লোড হচ্ছে...</div>
+</div>
+
+<!-- ================= OTHER USER PAGES ================= -->
+<div id="otherUserPages" class="page-screen">
+  <button onclick="goHome()" style="padding:8px 12px;border:1px solid #eee;border-radius:12px;background:#f8f9ff;margin-bottom:15px">⬅️ ফিরে যান</button>
+  <h3 id="otherTitle" style="margin:0 0 10px"></h3>
+  <div id="otherBody"></div>
+</div>
+
+<!-- ================= ADMIN LOGIN ================= -->
+<div id="adminLoginScreen" class="page-screen">
+  <button onclick="goHome()" style="padding:8px 12px;border:1px solid #eee;border-radius:12px;background:#f8f9ff;margin-bottom:15px">⬅️ ফিরে যান</button>
+  <h2>অ্যাডমিন লগইন 🔐</h2>
+  <input id="adminPass" type="password" placeholder="পাসওয়ার্ড" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+  <button onclick="doLogin()" style="width:100%;padding:13px;border:none;border-radius:12px;background:#4a00e0;color:white;font-weight:bold">লগইন করো</button>
+  <p id="loginMsg" style="color:red;text-align:center"></p>
+</div>
+
+<!-- ================= ADMIN DASHBOARD ================= -->
+<div id="adminPanel" class="page-screen">
+  <button onclick="goHome()" style="padding:8px 12px;border:1px solid #eee;border-radius:12px;background:#f8f9ff; margin-bottom:10px;">⬅️ ফিরে যান</button>
+  <h2 style="text-align:center; margin-top:0;">অ্যাডমিন ড্যাশবোর্ড ✅</h2>
+  <div style="display:flex; gap:10px; margin-bottom:15px;">
+    <div style="flex:1; background:#e3f2fd; padding:10px; border-radius:12px; text-align:center;">
+      <h3 id="adminTotalUsers" style="margin:0; color:#007bff;">0</h3><small style="font-weight:bold; color:#555;">ইউজার</small>
+    </div>
+    <div style="flex:1; background:#e8f5e9; padding:10px; border-radius:12px; text-align:center;">
+      <h3 id="adminTotalExams" style="margin:0; color:#28a745;">0</h3><small style="font-weight:bold; color:#555;">পরীক্ষা</small>
+    </div>
+  </div>
+  <div class="admin-grid">
+    <button onclick="showAdminPage('addBox')" class="admin-btn" style="background:#28a745;">➕<br><span>প্রশ্ন যোগ</span></button>
+    <button onclick="showAdminPage('bulkBox')" class="admin-btn" style="background:#007bff;">📥<br><span>Bulk Import</span></button>
+    <button onclick="showAdminPage('listBox')" class="admin-btn" style="background:#ff6b00;">✏️<br><span>এডিট/ডিলিট</span></button>
+    <button onclick="showAdminPage('repeatedBox')" class="admin-btn" style="background:#e11d48;">⚠️<br><span>রিপিট প্রশ্ন</span></button>
+    <button onclick="downloadQuestionsBackup()" class="admin-btn" style="background:#0d9488;">💾<br><span>Backup JSON</span></button>
+    <button onclick="showAdminPage('resultBox')" class="admin-btn" style="background:#4a00e0;">📊<br><span>রেজাল্ট</span></button>
+    <button onclick="showAdminPage('pendingBox')" class="admin-btn" style="background:#8b5cf6;">💡<br><span>সাজেশন</span></button>
+    <button onclick="showAdminPage('messagesBox')" class="admin-btn" style="background:#f43f5e;">💬<br><span>চ্যাট বক্স</span></button>
+    <button onclick="showAdminPage('usersBox')" class="admin-btn" style="background:#0ea5e9;">👥<br><span>ইউজার</span></button>
+    <button onclick="showAdminPage('notesBox')" class="admin-btn" style="background:#14b8a6;">📚<br><span>নোটস</span></button>
+    <button onclick="showAdminPage('reportsBox')" class="admin-btn" style="background:#ef4444;">🚩<br><span>রিপোর্ট</span></button>
+    <button onclick="showAdminPage('noticeBox')" class="admin-btn" style="background:#ea580c;">📢<br><span>নোটিশ</span></button>
+    <button onclick="showAdminPage('timerBox')" class="admin-btn" style="background:#f59e0b;">⏰<br><span>টাইমার</span></button>
+    <button onclick="showAdminPage('settingsBox')" class="admin-btn" style="background:#64748b;">⚙️<br><span>সেটিংস</span></button>
+  </div>
+  <div style="margin-bottom:15px; text-align:center;">
+    <button onclick="doLogout()" style="padding:10px 20px;border:none;border-radius:12px;background:#ff4757;color:white; font-weight:bold;">লগআউট 🚪</button>
+  </div>
+</div>
+
+<!-- ================= ADMIN SUB-PAGES ================= -->
+<div id="adminSubPage" class="page-screen" style="background:white; padding:18px; border-radius:20px;">
+  <button onclick="goToAdminPage()" style="padding:8px 12px;border:1px solid #eee;border-radius:12px;background:#f8f9ff;margin-bottom:15px">⬅️ পিছনে</button>
+  
+  <div id="addBox" style="display:none;">
+    <h3>নতুন প্রশ্ন</h3>
+    <div style="display:flex; gap:5px; margin-bottom:5px;">
+      <select id="adminClass" onchange="updateAdminSubjects()" style="width:50%;padding:13px;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+        <option value="HSC">HSC</option><option value="SSC">SSC</option>
+      </select>
+      <select id="adminGroup" onchange="updateAdminSubjects()" style="width:50%;padding:13px;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+        <option value="Science">Science</option><option value="Arts">Arts</option>
+      </select>
+    </div>
+    <select id="subjectSelect" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;"></select>
+    <select id="difficultySelect" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+      <option value="Easy">🟢 সহজ</option><option value="Medium" selected>🟡 মাঝারি</option><option value="Hard">🔴 কঠিন</option>
+    </select>
+    <input id="qText" placeholder="প্রশ্ন লিখো" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+    <input id="qImage" placeholder="ছবির লিংক" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+    <input id="optA" placeholder="Option A" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+    <input id="optB" placeholder="Option B" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+    <input id="optC" placeholder="Option C" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+    <input id="optD" placeholder="Option D" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+    <select id="correctAns" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
+    <input id="qExplain" placeholder="ব্যাখ্যা" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+    <button onclick="generateAIExplanation()" id="aiBtn" style="width:100%;padding:10px;margin-bottom:10px;border:none;border-radius:12px;background:#8b5cf6;color:white;font-weight:bold;">✨ AI Auto Explanation</button>
+    <button id="saveBtn" style="width:100%;padding:13px;border:none;border-radius:12px;background:#28a745;color:white;font-weight:bold">সেভ করুন</button>
+    <button id="cancelEditBtn" onclick="cancelEdit()" style="display:none; width:100%;padding:13px;margin-top:6px;border:none;border-radius:12px;background:#ccc;color:#333;font-weight:bold">বাতিল</button>
+    <p id="saveMsg" style="text-align:center; font-weight:bold;"></p>
+  </div>
+
+  <div id="bulkBox" style="display:none;">
+    <h3>Bulk Import (JSON)</h3>
+    <div style="display:flex; gap:5px; margin-bottom:5px;">
+      <select id="bulkClass" style="width:50%;padding:13px;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;"><option value="HSC">HSC</option><option value="SSC">SSC</option></select>
+      <select id="bulkGroup" style="width:50%;padding:13px;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;"><option value="Science">Science</option><option value="Arts">Arts</option></select>
+    </div>
+    <select id="bulkSubject" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+       <option value="Physics">Physics</option><option value="Chemistry">Chemistry</option><option value="Biology">Biology</option><option value="Higher Math">Higher Math</option><option value="ICT">ICT</option>
+       <option value="Bangla">Bangla</option><option value="English">English</option><option value="History">History</option><option value="Geography">Geography</option><option value="Civics">Civics</option><option value="Logic">Logic</option><option value="Islamic History">Islamic History</option>
+    </select>
+    <textarea id="bulkJSON" placeholder='[{"question": "প্রশ্ন", "optionA": "A", "optionB": "B", "optionC": "C", "optionD": "D", "Correct": "A", "explanation": "ব্যাখ্যা", "difficulty": "Easy"}]' style="width:100%;height:150px;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;font-family:monospace;box-sizing:border-box;"></textarea>
+    <button id="bulkSaveBtn" style="width:100%;padding:13px;border:none;border-radius:12px;background:#007bff;color:white;font-weight:bold">Import 🚀</button>
+    <p id="bulkMsg" style="text-align:center;font-weight:bold;margin-top:10px;"></p>
+  </div>
+
+  <div id="noticeBox" style="display:none;">
+    <h3>নোটিশ পাঠান</h3>
+    <textarea id="noticeInput" placeholder="নোটিশ লিখুন" style="width:100%;height:100px;padding:10px;margin-bottom:5px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></textarea>
+    <button onclick="sendNotice()" style="width:100%;padding:10px;border:none;border-radius:8px;background:#f59e0b;color:white;font-weight:bold;margin-bottom:5px;">পাঠান</button>
+    <button onclick="cancelNotice()" style="width:100%;padding:10px;border:none;border-radius:8px;background:#ef4444;color:white;font-weight:bold;">নোটিশ মুছুন</button>
+  </div>
+
+  <div id="settingsBox" style="display:none;">
+    <h3>সেটিংস</h3>
+    <input id="geminiKeyInput" type="password" placeholder="Gemini API Key..." style="width:100%;padding:10px;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+    <button onclick="saveApiKey()" style="width:100%;padding:10px;border:none;border-radius:8px;background:#0ea5e9;color:white;font-weight:bold;">সেভ করুন</button>
+  </div>
+
+  <div id="timerBox" style="display:none;">
+    <h3>টাইমার সেটিং</h3>
+    <p style="text-align:center">বর্তমান: <b id="currentTimer">10</b> সেকেন্ড / ১টা প্রশ্ন</p>
+    <div style="display:flex; gap:5px; margin-bottom:10px;">
+        <input id="customMin" type="number" placeholder="মিনিট" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px;box-sizing:border-box;">
+        <input id="customSec" type="number" placeholder="সেকেন্ড" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px;box-sizing:border-box;">
+    </div>
+    <button onclick="setCustomTimer()" style="width:100%;padding:10px;margin-bottom:5px;border:none;border-radius:8px;background:#4a00e0;color:white;font-weight:bold;">কাস্টম সময় সেভ করো ✅</button>
+    <button onclick="setTimer(10)" style="width:100%;padding:10px;margin-bottom:5px;border:none;border-radius:8px;background:#eee;font-weight:bold">১০ সেকেন্ড</button>
+    <button onclick="setTimer(30)" style="width:100%;padding:10px;margin-bottom:5px;border:none;border-radius:8px;background:#eee;font-weight:bold">৩০ সেকেন্ড</button>
+    <button onclick="setTimer(60)" style="width:100%;padding:10px;margin-bottom:5px;border:none;border-radius:8px;background:#eee;font-weight:bold">১ মিনিট</button>
+    <p id="timerMsg" style="text-align:center;color:green;font-weight:bold"></p>
+  </div>
+
+  <div id="listBox" style="display:none;">
+    <input type="text" id="searchList" class="search-box" placeholder="🔍 প্রশ্ন খুঁজুন..." oninput="window.loadListFn()" value="">
+    <div style="display:flex; gap:5px; margin-bottom:5px;">
+      <select id="filterClass" style="width:50%;padding:13px;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;"><option value="HSC">HSC</option><option value="SSC">SSC</option><option value="All">All Class</option></select>
+      <select id="filterGroup" style="width:50%;padding:13px;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;"><option value="Science">Science</option><option value="Arts">Arts</option><option value="All">All Group</option></select>
+    </div>
+    <select id="filterSubject" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+      <option value="All">সব সাবজেক্ট</option>
+      <option value="Physics">Physics</option><option value="Chemistry">Chemistry</option><option value="Biology">Biology</option><option value="Higher Math">Higher Math</option><option value="Math">Math</option><option value="ICT">ICT</option>
+      <option value="History">History</option><option value="Geography">Geography</option><option value="Civics">Civics</option><option value="Logic">Logic</option><option value="Islamic History">Islamic History</option>
+      <option value="Bangla">Bangla</option><option value="English">English</option>
+    </select>
+    <button onclick="window.loadListFn()" style="width:100%; padding:10px; background:#0ea5e9; color:white; border-radius:8px; font-weight:bold; margin-bottom:10px;">🔍 প্রশ্ন লোড করুন</button>
+    <div id="qList">ক্লাস, গ্রুপ ও সাবজেক্ট সিলেক্ট করে 'লোড' বাটনে ক্লিক করুন।</div>
+  </div>
+  
+  <div id="repeatedBox" style="display:none;">
+    <h3 style="color:#e11d48; margin-top:0;">⚠️ রিপিট হওয়া প্রশ্নসমূহ</h3>
+    <div style="display:flex; gap:5px; margin-bottom:10px;">
+      <button onclick="deleteSelectedRepeated()" style="flex:1; padding:10px; background:#ef4444; color:white; border:none; border-radius:8px; font-weight:bold;">🗑️ সিলেক্ট ডিলিট</button>
+      <button onclick="toggleSelectAllRepeated()" id="selectAllRepeatedBtn" style="flex:1; padding:10px; background:#3b82f6; color:white; border:none; border-radius:8px; font-weight:bold;">সব সিলেক্ট</button>
+    </div>
+    <input type="text" id="searchRepeated" class="search-box" placeholder="🔍 রিপিট প্রশ্ন খুঁজুন..." oninput="window.loadRepeatedFn()" value="">
+    <div id="repeatedList"></div>
+  </div>
+
+  <div id="resultBox" style="display:none;">
+    <button onclick="exportResultsToCSV()" style="width:100%;padding:10px;margin-bottom:10px;border:none;border-radius:12px;background:#10b981;color:white;font-weight:bold">📥 Download CSV</button>
+    <p id="totalResult" style="text-align:center;font-weight:bold"></p><div id="resultList"></div>
+  </div>
+  
+  <div id="pendingBox" style="display:none;"><div id="pendingList"></div></div>
+  
+  <!-- Admin Chat System -->
+  <div id="messagesBox" style="display:none;">
+    <h3 style="color:#0ea5e9; margin-top:0;">💬 চ্যাট বক্স (ইউজার লিস্ট)</h3>
+    <div id="adminChatList"></div>
+  </div>
+
+  <div id="usersBox" style="display:none;">
+    <input type="text" id="searchUsers" class="search-box" placeholder="🔍 নাম বা কোড দিয়ে খুঁজুন..." oninput="window.loadUsersFn()" value="">
+    <div id="usersList"></div>
+  </div>
+  
+  <div id="notesBox" style="display:none;">
+    <input id="noteTitle" placeholder="Note Title" style="width:100%;padding:10px;margin-bottom:5px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+    <input id="noteLink" placeholder="Link" style="width:100%;padding:10px;margin-bottom:5px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+    <button onclick="addNote()" style="width:100%;padding:10px;border:none;border-radius:8px;background:#14b8a6;color:white;font-weight:bold;margin-bottom:15px;">Add Note</button>
+    <div id="notesListAdmin"></div>
+  </div>
+  
+  <div id="reportsBox" style="display:none;"><div id="reportsList"></div></div>
+</div>
+
+<!-- ================= ADMIN CHAT SCREEN ================= -->
+<div id="adminChatScreen" class="page-screen">
+  <button onclick="showAdminPage('messagesBox')" style="padding:8px 12px;border:1px solid #eee;border-radius:12px;background:#f8f9ff;margin-bottom:15px">⬅️ চ্যাট লিস্টে ফিরে যান</button>
+  <h3 id="adminChatTitle" style="text-align:center;color:#0ea5e9;margin-bottom:15px;">💬 চ্যাট</h3>
+  <div class="chat-container">
+    <div id="adminChatMessages" class="chat-messages"></div>
+    <div class="chat-input-area">
+      <input id="adminChatInput" type="text" placeholder="রিপ্লাই লিখুন..." style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;">
+      <button onclick="sendAdminReply()" style="padding:10px 20px;background:#0ea5e9;color:white;border:none;border-radius:8px;font-weight:bold;">রিপ্লাই</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+<div id="suggestModal" class="modal">
+  <div class="modal-content">
+    <h3 style="margin-top:0">💡 প্রশ্ন সাজেশন</h3>
+    <select id="sugClass" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;"><option value="HSC">HSC</option><option value="SSC">SSC</option></select>
+    <select id="sugGroup" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;"><option value="Science">Science</option><option value="Arts">Arts</option></select>
+    <select id="sugSubject" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+      <option value="Physics">Physics</option><option value="Chemistry">Chemistry</option><option value="Biology">Biology</option><option value="Higher Math">Higher Math</option><option value="Math">Math</option><option value="ICT">ICT</option>
+      <option value="History">History</option><option value="Geography">Geography</option><option value="Civics">Civics</option><option value="Logic">Logic</option><option value="Islamic History">Islamic History</option>
+      <option value="Bangla">Bangla</option><option value="English">English</option>
+    </select>
+    <input id="sugQ" placeholder="প্রশ্ন" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+    <input id="sugA" placeholder="A" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+    <input id="sugB" placeholder="B" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+    <input id="sugC" placeholder="C" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+    <input id="sugD" placeholder="D" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;">
+    <select id="sugCorrect" style="width:100%;padding:13px;margin:6px 0;border:1px solid #ddd;border-radius:12px;box-sizing:border-box;"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
+    <button onclick="submitSuggestion()" style="width:100%;padding:13px;margin-top:10px;border:none;border-radius:12px;background:#4a00e0;color:white;font-weight:bold">পাঠিয়ে দিন 🚀</button>
+    <button onclick="document.getElementById('suggestModal').style.display='none'" style="width:100%;padding:13px;margin-top:6px;border:none;border-radius:12px;background:#ccc;color:#333;font-weight:bold">বাতিল</button>
+    <p id="sugMsg" style="text-align:center; font-weight:bold; margin-top:10px;"></p>
+  </div>
+</div>
+
+<div id="mixedModal" class="modal">
+  <div class="modal-content">
+    <h3 style="margin-top:0">🎲 মিশ্র পরীক্ষা</h3>
+    <p style="font-size:13px; color:#666; margin-bottom:10px;">প্রতিটি বিষয়ের পাশে কতটি প্রশ্ন চাও তা লিখো।</p>
+    <div id="mixedSubjectList"></div>
+    <button onclick="startMixedExamSetup()" style="width:100%;padding:13px;margin-top:15px;border:none;border-radius:12px;background:#28a745;color:white;font-weight:bold">পরবর্তী ধাপ ➡️</button>
+    <button onclick="document.getElementById('mixedModal').style.display='none'" style="width:100%;padding:10px;margin-top:6px;border:none;border-radius:12px;background:#ccc;color:#333;font-weight:bold">বাতিল</button>
+  </div>
+</div>
+
+<div id="modeModal" class="modal">
+  <div class="modal-content" style="text-align:center;">
+    <h3>পরীক্ষার ধরন</h3>
+    <button onclick="startExamWithMode('test')" style="width:100%;padding:13px;margin:10px 0;border:none;border-radius:12px;background:#4a00e0;color:white;font-weight:bold">📝 টেস্ট মোড (টাইমার সহ)</button>
+    <button onclick="startExamWithMode('practice')" style="width:100%;padding:13px;margin-bottom:10px;border:none;border-radius:12px;background:#f59e0b;color:white;font-weight:bold">📖 প্র্যাকটিস মোড (ব্যাখ্যা সহ)</button>
+    <button onclick="document.getElementById('modeModal').style.display='none'" style="width:100%;padding:10px;margin-top:6px;border:none;border-radius:12px;background:#ccc;color:#333;font-weight:bold">বাতিল</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ========== SOUND ENGINE ==========
+let audioCtx = null;
+let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  return audioCtx;
+}
+
+window.playCorrectSound = function () {
+  if (!soundEnabled) return;
+  const ctx = getAudioCtx(); if (!ctx) return;
+  const now = ctx.currentTime;
+  const freqs = [523.25, 659.25, 783.99, 1046.5];
+  freqs.forEach((freq, i) => {
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.type = 'triangle'; osc.frequency.value = freq;
+    const t = now + i * 0.08;
+    gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.18, t + 0.02); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    osc.connect(gain).connect(ctx.destination); osc.start(t); osc.stop(t + 0.3);
+  });
+};
+
+window.playWrongSound = function () {
+  if (!soundEnabled) return;
+  const ctx = getAudioCtx(); if (!ctx) return;
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator(); const gain = ctx.createGain();
+  osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, now); osc.frequency.exponentialRampToValueAtTime(80, now + 0.25);
+  gain.gain.setValueAtTime(0.12, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+  osc.connect(gain).connect(ctx.destination); osc.start(now); osc.stop(now + 0.3);
+};
+
+// ========== HELPERS ==========
+let currentLang = localStorage.getItem('appLang') || 'bn';
+let isExamActive = false;
+let currentSubject = "";
+let examMode = 'test';
+let editingQId = null;
+let pendingExamQuestions = [];
+let pendingExamMode = 'test';
+let examTime = 10;
+let isAllSelected = false;
+
+window.esc = function (s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+};
+
+window.showToast = function (msg, type = 'info', duration = 2500) {
+  const colors = { info: '#333', success: '#28a745', error: '#ef4444', warn: '#f59e0b' };
+  const t = document.createElement('div');
+  t.className = 'toast'; t.style.background = colors[type] || colors.info; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, duration);
+};
+
+window.addEventListener('beforeunload', function (e) {
+  if (isExamActive) { e.preventDefault(); e.returnValue = ''; }
+});
+
+function toggleLanguage() {
+  currentLang = currentLang === 'bn' ? 'en' : 'bn';
+  localStorage.setItem('appLang', currentLang); applyLanguage();
+}
+function applyLanguage() {
+  document.querySelectorAll('[data-bn], [data-en]').forEach(el => {
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+      if (el.hasAttribute(`data-${currentLang}-placeholder`)) el.placeholder = el.getAttribute(`data-${currentLang}-placeholder`);
+    } else if (el.tagName === 'OPTION') {
+      if (el.hasAttribute(`data-${currentLang}`)) el.innerText = el.getAttribute(`data-${currentLang}`);
+    } else {
+      const v = el.getAttribute(`data-${currentLang}`); if (v) el.innerText = v;
+    }
+  });
+}
+function toggleTheme() {
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+}
+if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+
+function showPage(pageId) {
+  document.querySelectorAll('.page-screen').forEach(p => p.classList.remove('active-page'));
+  if (pageId) { document.getElementById(pageId).classList.add('active-page'); window.scrollTo(0, 0); }
+}
+function goHome() { showPage('homeScreen'); isExamActive = false; if (window.stopTimerFn) window.stopTimerFn(); }
+function goToAdminPage() { showPage('adminPanel'); }
+function goToAdminLoginPage() { showPage('adminLoginScreen'); }
+
+function goToUserPage() {
+  if (!localStorage.getItem('studentCode')) { showPage('registerScreen'); }
+  else {
+    if (!localStorage.getItem('studentClass')) localStorage.setItem('studentClass', 'HSC');
+    if (!localStorage.getItem('studentGroup')) localStorage.setItem('studentGroup', 'Science');
+    showPage('userScreen'); renderUserSubjects(); checkResumeExam();
+  }
+}
+
+function registerUser() {
+  const name = document.getElementById("regName").value.trim();
+  const code = document.getElementById("regCode").value.trim().toUpperCase();
+  const cls = document.getElementById("regClass").value;
+  const grp = document.getElementById("regGroup").value;
+  const msg = document.getElementById("regMsg");
+  if (!name || !code) { msg.innerText = "নাম এবং কোড দিন!"; return; }
+  if (code.length < 3) { msg.innerText = "কোড কমপক্ষে ৩ অক্ষরের হতে হবে!"; return; }
+  
+  localStorage.setItem("studentName", name); localStorage.setItem("studentCode", code);
+  localStorage.setItem("studentClass", cls); localStorage.setItem("studentGroup", grp);
+  
+  if (window.saveUserFn) window.saveUserFn({ name, code, cls, grp });
+  msg.innerText = ""; goToUserPage();
+}
+
+function getSubjects(cls, grp) {
+  let subjects = ["Bangla", "English"];
+  if (cls === 'HSC') {
+    if (grp === 'Science') subjects.push("Physics", "Chemistry", "Biology", "Higher Math", "ICT");
+    else subjects.push("History", "Geography", "Logic", "Islamic History", "Civics");
+  } else {
+    if (grp === 'Science') subjects.push("Physics", "Chemistry", "Biology", "Math", "ICT");
+    else subjects.push("History", "Geography", "Civics", "General Math");
+  }
+  return subjects;
+}
+
+function renderUserSubjects() {
+  const name = localStorage.getItem("studentName") || '';
+  const cls = localStorage.getItem("studentClass") || "HSC";
+  const grp = localStorage.getItem("studentGroup") || "Science";
+  const pic = localStorage.getItem("studentPic");
+  document.getElementById("welcomeName").innerHTML = (pic ? `<img src="${esc(pic)}" style="width:30px;height:30px;border-radius:50%;vertical-align:middle"> ` : '') + `হ্যালো <b>${esc(name)}</b> (${esc(cls)} - ${esc(grp)})`;
+  
+  const allQ = window._allQ || [];
+  let html = "";
+  getSubjects(cls, grp).forEach(sub => {
+    const count = allQ.filter(q => q.subject === sub && q.class === cls && q.group === grp).length;
+    html += `<button onclick="prepareExam('${esc(sub)}')" style="width:100%;padding:15px;margin:6px 0;border:none;border-radius:12px;background:#e3f2fd;text-align:left;font-weight:bold;color:#333">
+      ${esc(sub)} <span style="float:right;color:#007bff">${count > 0 ? count + " টি প্রশ্ন" : ""}</span>
+    </button>`;
+  });
+  document.getElementById("subjectListContainer").innerHTML = html;
+}
+
+function showMixedSetup() {
+  const cls = localStorage.getItem("studentClass") || "HSC";
+  const grp = localStorage.getItem("studentGroup") || "Science";
+  const allQ = window._allQ || [];
+  let html = "";
+  getSubjects(cls, grp).forEach(sub => {
+    const count = allQ.filter(q => q.subject === sub && q.class === cls && q.group === grp).length;
+    if (count > 0) {
+      html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; background:#f8f9ff; padding:10px; border-radius:8px; border:1px solid #eee;">
+        <span style="font-weight:bold; color:#333;">${esc(sub)} <small style="color:#666;">(${count} টি আছে)</small></span>
+        <input type="number" id="mix_${esc(sub)}" placeholder="0" min="0" max="${count}" style="width:60px; padding:5px; border:1px solid #ddd; border-radius:5px; text-align:center;">
+      </div>`;
+    }
+  });
+  if (html === "") { showToast("আপনার জন্য কোনো প্রশ্ন নেই!", 'warn'); return; }
+  document.getElementById("mixedSubjectList").innerHTML = html;
+  document.getElementById("mixedModal").style.display = "flex";
+}
+
+function startMixedExamSetup() {
+  const cls = localStorage.getItem("studentClass") || "HSC";
+  const grp = localStorage.getItem("studentGroup") || "Science";
+  const allQ = window._allQ || [];
+  let mixedQuestions = [];
+  document.querySelectorAll('#mixedSubjectList input[type="number"]').forEach(input => {
+    const sub = input.id.replace("mix_", "");
+    let count = parseInt(input.value);
+    if (count > 0) {
+      let subQs = allQ.filter(q => q.subject === sub && q.class === cls && q.group === grp);
+      subQs.sort(() => Math.random() - 0.5);
+      if (count > subQs.length) count = subQs.length;
+      mixedQuestions.push(...subQs.slice(0, count));
+    }
+  });
+  if (mixedQuestions.length === 0) { showToast("কমপক্ষে ১টি বিষয়ে প্রশ্ন সংখ্যা দিন!", 'warn'); return; }
+  window._pendingMixedQuestions = mixedQuestions;
+  document.getElementById("mixedModal").style.display = "none";
+  document.getElementById("modeModal").style.display = "flex";
+}
+
+function updateAdminSubjects() {
+  const cls = document.getElementById("adminClass").value;
+  const grp = document.getElementById("adminGroup").value;
+  document.getElementById("subjectSelect").innerHTML = getSubjects(cls, grp).map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("");
+}
+
+function toggleEditProfile() {
+  const view = document.getElementById("profViewMode");
+  const edit = document.getElementById("profEditMode");
+  if (edit.style.display === "none") {
+    view.style.display = "none"; edit.style.display = "block";
+    document.getElementById("editName").value = localStorage.getItem("studentName") || "";
+    document.getElementById("editCode").value = localStorage.getItem("studentCode") || "";
+    document.getElementById("editClass").value = localStorage.getItem("studentClass") || "HSC";
+    document.getElementById("editGroup").value = localStorage.getItem("studentGroup") || "Science";
+  } else { view.style.display = "block"; edit.style.display = "none"; }
+}
+
+function saveProfileEdit() {
+  const n = document.getElementById("editName").value.trim();
+  const c = document.getElementById("editCode").value.trim().toUpperCase();
+  if (!n || !c) { showToast("নাম ও কোড দিন!", 'warn'); return; }
+  localStorage.setItem("studentName", n); localStorage.setItem("studentCode", c);
+  localStorage.setItem("studentClass", document.getElementById("editClass").value);
+  localStorage.setItem("studentGroup", document.getElementById("editGroup").value);
+  showToast("প্রোফাইল আপডেট হয়েছে ✅", 'success'); showProfilePage(); renderUserSubjects();
+}
+
+function uploadProfilePic(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const img = new Image();
+    img.onload = function () {
+      const canvas = document.createElement('canvas');
+      canvas.width = 80; canvas.height = img.height * (80 / img.width);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      localStorage.setItem("studentPic", canvas.toDataURL('image/jpeg', 0.8));
+      showProfilePage(); renderUserSubjects();
+    }
+    img.src = e.target.result;
+  }
+  reader.readAsDataURL(file);
+}
+
+function showProfilePage() {
+  const name = localStorage.getItem("studentName"); const code = localStorage.getItem("studentCode");
+  const cls = localStorage.getItem("studentClass") || "HSC"; const grp = localStorage.getItem("studentGroup") || "Science";
+  const pic = localStorage.getItem("studentPic");
+  if (!code) { goToUserPage(); return; }
+  
+  document.getElementById("profName").innerText = name || '';
+  document.getElementById("profCode").innerText = "Code: " + code;
+  document.getElementById("profGroup").innerText = cls + " - " + grp;
+  
+  const streak = parseInt(localStorage.getItem("streakCount") || "0");
+  const profStreak = document.getElementById("profStreak");
+  if (streak > 1) { profStreak.style.display = "block"; profStreak.innerText = `🔥 ${streak} দিনের স্ট্রিক!`; }
+  else { profStreak.style.display = "none"; }
+  
+  if (pic) {
+    document.getElementById("profPicImg").src = pic; document.getElementById("profPicImg").style.display = "block";
+    document.getElementById("profPicPlaceholder").style.display = "none";
+  } else {
+    document.getElementById("profPicImg").style.display = "none"; document.getElementById("profPicPlaceholder").style.display = "block";
+  }
+  
+  showPage("profileScreen");
+  if (window.loadProfileFn) window.loadProfileFn(name, code);
+}
+
+function showAdminPage(pageId) {
+  showPage('adminSubPage');
+  document.querySelectorAll('#adminSubPage > div').forEach(div => div.style.display = 'none');
+  document.getElementById(pageId).style.display = 'block';
+  if (pageId === 'addBox') updateAdminSubjects();
+  if (pageId === 'listBox') { document.getElementById('searchList').value = ""; document.getElementById('qList').innerHTML = "ক্লাস, গ্রুপ ও সাবজেক্ট সিলেক্ট করে 'লোড' বাটনে ক্লিক করুন।"; }
+  if (pageId === 'repeatedBox') { document.getElementById('searchRepeated').value = ""; if (window.loadRepeatedFn) window.loadRepeatedFn(); }
+  if (pageId === 'resultBox' && window.loadResultsFn) window.loadResultsFn();
+  if (pageId === 'pendingBox' && window.loadPendingFn) window.loadPendingFn();
+  if (pageId === 'messagesBox' && window.loadAdminChatList) window.loadAdminChatList();
+  if (pageId === 'usersBox') { document.getElementById('searchUsers').value = ""; if (window.loadUsersFn) window.loadUsersFn(); }
+  if (pageId === 'notesBox' && window.loadNotesAdminFn) window.loadNotesAdminFn();
+  if (pageId === 'reportsBox' && window.loadReportsFn) window.loadReportsFn();
+}
+
+function doLogin() {
+  if (document.getElementById("adminPass").value.trim() === "jacksparrow") {
+    localStorage.setItem("isAdmin", "true"); showPage('adminPanel');
+    if (window.loadAdminDashboardFn) window.loadAdminDashboardFn();
+  } else { document.getElementById("loginMsg").innerText = "ভুল পাসওয়ার্ড ❌"; }
+}
+function doLogout() { localStorage.removeItem("isAdmin"); location.reload(); }
+
+window.downloadQuestionsBackup = async function () {
+  if (!window._allQ) { showToast("প্রশ্ন লোড হচ্ছে, অপেক্ষা করুন...", 'warn'); return; }
+  const dataStr = JSON.stringify(window._allQ, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url; link.download = "questions_backup_" + new Date().toISOString().slice(0, 10) + ".json";
+  document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+};
+
+function cancelEdit() {
+  editingQId = null;
+  const addBox = document.getElementById('addBox');
+  if (addBox) addBox.querySelector('h3').innerText = 'নতুন প্রশ্ন';
+  document.getElementById('saveBtn').innerText = 'সেভ করুন';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  ['qText', 'qImage', 'optA', 'optB', 'optC', 'optD', 'qExplain'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('saveMsg').innerText = '';
+}
+window.cancelEdit = cancelEdit;
+
+function prepareExam(sub) {
+  currentSubject = sub; window._pendingMixedQuestions = null;
+  const cls = localStorage.getItem("studentClass") || "HSC";
+  const grp = localStorage.getItem("studentGroup") || "Science";
+  const all = window._allQ || [];
+  const availableCount = all.filter(q => q.subject === sub && q.class === cls && q.group === grp).length;
+  if (availableCount === 0) { showToast("এই সাবজেক্টে আপনার জন্য কোনো প্রশ্ন নেই!", 'warn'); return; }
+  
+  let limitStr = prompt(`মোট ${availableCount} টি প্রশ্ন আছে। কতটি দিতে চান?`, availableCount);
+  if (limitStr === null) return;
+  let limit = parseInt(limitStr);
+  if (isNaN(limit) || limit <= 0) { showToast("ভুল সংখ্যা!", 'error'); return; }
+  if (limit > availableCount) limit = availableCount;
+  window._examLimit = limit;
+  document.getElementById("modeModal").style.display = "flex";
+}
+
+function startExamWithMode(mode) {
+  examMode = mode; document.getElementById("modeModal").style.display = "none";
+  let questions = []; const cls = localStorage.getItem("studentClass") || "HSC"; const grp = localStorage.getItem("studentGroup") || "Science";
+  if (window._pendingMixedQuestions && window._pendingMixedQuestions.length > 0) {
+    questions = window._pendingMixedQuestions; document.getElementById("examTitle").innerText = "মিশ্র পরীক্ষা";
+  } else {
+    let all = window._allQ || [];
+    let filtered = all.filter(q => q.subject === currentSubject && q.class === cls && q.group === grp);
+    filtered.sort(() => Math.random() - 0.5);
+    questions = window._examLimit < filtered.length ? filtered.slice(0, window._examLimit) : filtered;
+    document.getElementById("examTitle").innerText = currentSubject + " পরীক্ষা";
+  }
+  if (questions.length === 0) { showToast("প্রশ্ন নেই!", 'error'); return; }
+  pendingExamQuestions = questions; pendingExamMode = mode;
+  
+  let timeCalcStr = "আনলিমিটেড";
+  if (mode === 'test') {
+    let totalSecs = examTime * questions.length;
+    if (totalSecs >= 60) {
+      let m = Math.floor(totalSecs / 60); let s = totalSecs % 60;
+      timeCalcStr = s === 0 ? m + " মিনিট" : m + " মিনিট " + s + " সেকেন্ড";
+    } else { timeCalcStr = totalSecs + " সেকেন্ড"; }
+  }
+  
+  document.getElementById("instDetails").innerHTML = `
+    <p><b>মোট প্রশ্ন:</b> ${questions.length} টি</p>
+    <p><b>মোড:</b> ${mode === 'test' ? 'টেস্ট (টাইমার সহ)' : 'প্র্যাকটিস (ব্যাখ্যা সহ)'}</p>
+    <p><b>মোট সময়:</b> ${timeCalcStr}</p>
+    <p style="font-size:13px; color:red; margin-top:10px;">* পরীক্ষার মাঝখানে অ্যাপ থেকে বের হলে সতর্কবার্তা আসবে।</p>
+  `;
+  showPage('instructionsScreen');
+}
+
+function startExamFromInstructions() {
+  showPage('examScreen'); isExamActive = true;
+  if (window.startExamFromInstFn) window.startExamFromInstFn(pendingExamQuestions, pendingExamMode);
+}
+function checkResumeExam() {
+  const resume = JSON.parse(localStorage.getItem("resumeExam") || 'null');
+  document.getElementById("resumeBanner").style.display = (resume && resume.active) ? "block" : "none";
+}
+function resumeExam() {
+  const resume = JSON.parse(localStorage.getItem("resumeExam") || 'null'); if (!resume) return;
+  currentSubject = resume.subject; examMode = resume.mode;
+  showPage('examScreen'); isExamActive = true;
+  if (window.loadResumeExamFn) window.loadResumeExamFn(resume);
+}
+function clearResume() { localStorage.removeItem("resumeExam"); document.getElementById("resumeBanner").style.display = "none"; }
+
+function confirmExitExam() {
+  if (confirm("আপনি কি সত্যিই পরীক্ষা থেকে বের হয়ে যেতে চান? প্রোগ্রেস সেভ হবে না।")) {
+    isExamActive = false; localStorage.removeItem("resumeExam"); goToUserPage();
+  }
+}
+
+async function generateAIExplanation() {
+  const apiKey = localStorage.getItem("geminiApiKey");
+  if (!apiKey) { showToast("সেটিংসে API Key দিন!", 'warn'); return; }
+  const q = document.getElementById("qText").value.trim();
+  const correct = document.getElementById("correctAns").value;
+  const box = document.getElementById("qExplain"); const btn = document.getElementById("aiBtn");
+  if (!q) { showToast("আগে প্রশ্ন লিখুন!", 'warn'); return; }
+  
+  box.value = "জেনারেট হচ্ছে..."; btn.disabled = true;
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-goog-api-key': apiKey },
+      body: JSON.stringify({ contents: [{ parts: [{ text: `Explain briefly in Bengali (max 30 words) why option ${correct} is correct for: "${q}". Also determine difficulty level (Easy, Medium, or Hard). Return exactly: [Explanation] || [Difficulty]` }] }] })
+    });
+    const data = await res.json();
+    if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+      let rawText = data.candidates[0].content.parts[0].text.trim();
+      let parts = rawText.split("||");
+      if (parts.length === 2) {
+        box.value = parts[0].trim();
+        let diff = parts[1].trim().toLowerCase(); const dSel = document.getElementById("difficultySelect");
+        if (diff.includes("easy") || diff.includes("সহজ")) dSel.value = "Easy";
+        else if (diff.includes("hard") || diff.includes("কঠিন")) dSel.value = "Hard";
+        else dSel.value = "Medium";
+      } else { box.value = rawText; }
+    } else { box.value = "ব্যর্থ! এরর: " + (data.error ? data.error.message : "Unknown"); }
+  } catch (e) { box.value = "ইন্টারনেট বা API সমস্যা!"; }
+  btn.innerText = "✨ AI Auto Explanation"; btn.disabled = false;
+}
+
+function saveApiKey() {
+  const k = document.getElementById("geminiKeyInput").value.trim();
+  if (!k) { showToast("API Key দিন!", 'warn'); return; }
+  localStorage.setItem("geminiApiKey", k); showToast("সেভ হয়েছে ✅", 'success');
+}
+
+async function sendNotice() {
+  const text = document.getElementById("noticeInput").value.trim();
+  if (!text) { showToast("নোটিশ লিখুন!", 'warn'); return; }
+  if (window.saveNoticeFn) await window.saveNoticeFn(text);
+  document.getElementById("noticeText").innerText = text;
+  document.getElementById("noticeBoard").style.display = "block";
+  showToast("নোটিশ পাঠানো হয়েছে ✅", 'success');
+}
+async function cancelNotice() {
+  if (window.saveNoticeFn) await window.saveNoticeFn("");
+  document.getElementById("noticeBoard").style.display = "none";
+  showToast("নোটিশ মুছে ফেলা হয়েছে!", 'info');
+}
+
+function showSuggestModal() {
+  if (!localStorage.getItem("studentCode")) { showToast("আগে লগইন করুন!", 'warn'); return; }
+  ['sugQ', 'sugA', 'sugB', 'sugC', 'sugD'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById("sugMsg").innerText = "";
+  document.getElementById("suggestModal").style.display = "flex";
+}
+window.showSuggestModal = showSuggestModal;
+
+// ========== CHAT SYSTEM (UI LOGIC) ==========
+function showUserChat() {
+  if (!localStorage.getItem("studentCode")) { showToast("আগে লগইন করুন!", 'warn'); return; }
+  showPage('userChatScreen');
+  if (window.listenUserChat) window.listenUserChat(localStorage.getItem("studentCode"));
+}
+
+async function sendUserChatMessage() {
+  const input = document.getElementById("userChatInput");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  if (window.sendChatMsgToDb) await window.sendChatMsgToDb(localStorage.getItem("studentCode"), text, 'user');
+}
+
+function openAdminChat(userCode, userName) {
+  showPage('adminChatScreen');
+  document.getElementById("adminChatTitle").innerText = `💬 ${userName} (${userCode})`;
+  if (window.listenAdminChat) window.listenAdminChat(userCode);
+}
+
+async function sendAdminReply() {
+  const input = document.getElementById("adminChatInput");
+  const text = input.value.trim();
+  if (!text) return;
+  const title = document.getElementById("adminChatTitle").innerText;
+  const match = title.match(/\((.*?)\)/);
+  if (!match) return;
+  const userCode = match[1];
+  input.value = '';
+  if (window.sendChatMsgToDb) await window.sendChatMsgToDb(userCode, text, 'admin');
+}
+
+// ========== BOOKMARKS & NOTES ==========
+function showBookmarksPage() {
+  showPage('otherUserPages'); document.getElementById("otherTitle").innerText = "🔖 Bookmarks";
+  const arr = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+  if (arr.length === 0) { document.getElementById("otherBody").innerHTML = "খালি!"; return; }
+  let html = "";
+  arr.forEach((m, idx) => {
+    html += `<div style='background:#f0f8ff;padding:10px;border-radius:10px;margin:6px 0; border-left:3px solid #3b82f6;'>
+       <b>${esc(m.question)}</b><br><small>A) ${esc(m.optionA)} | B) ${esc(m.optionB)} | C) ${esc(m.optionC)} | D) ${esc(m.optionD)}</small>
+       <button onclick="removeBookmark(${idx})" style="margin-top:5px;padding:5px 10px;background:#ef4444;color:white;border:none;border-radius:5px;font-size:12px;display:block;">🗑️ রিমুভ</button>
+     </div>`;
+  });
+  document.getElementById("otherBody").innerHTML = html;
+}
+window.removeBookmark = function (idx) {
+  let arr = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+  arr.splice(idx, 1); localStorage.setItem("bookmarks", JSON.stringify(arr)); showBookmarksPage();
+};
+function showNotesPage() {
+  showPage('otherUserPages'); document.getElementById("otherTitle").innerText = "📚 Study Notes";
+  document.getElementById("otherBody").innerHTML = "লোড হচ্ছে..."; if (window.loadNotesUserFn) window.loadNotesUserFn();
+}
+
+// ========== MISTAKES ==========
+function showMistakePage() {
+  showPage('otherUserPages'); document.getElementById("otherTitle").innerText = "📕 Mistake Book";
+  const arr = JSON.parse(localStorage.getItem("mistakes") || "[]");
+  if (arr.length === 0) { document.getElementById("otherBody").innerHTML = "কোনো ভুল নেই! 🎉"; return; }
+  let html = "";
+  arr.forEach(m => { html += `<div style='background:#fff0f0;padding:10px;border-radius:10px;margin:6px 0'><b>${esc(m.q)}</b><br>সঠিক: ${esc(m.ans)} | তোমার উত্তর: ${esc(m.your)}</div>`; });
+  html += `<button onclick="clearMistakes()" style="width:100%;padding:10px;margin-top:10px;background:#ef4444;color:white;border:none;border-radius:8px;font-weight:bold;">সব মুছে ফেলো</button>`;
+  document.getElementById("otherBody").innerHTML = html;
+}
+window.clearMistakes = function () {
+  if (confirm("সব ভুলের খাতা মুছে ফেলতে চান?")) { localStorage.removeItem("mistakes"); showMistakePage(); }
+};
+
+function showDashboardPage() {
+  showPage('otherUserPages'); document.getElementById("otherTitle").innerText = "📊 Performance Dashboard";
+  if (window.loadDashboardFn) window.loadDashboardFn();
+}
+function showLeaderboardPage() {
+  showPage('leaderboardScreen'); if (window.loadLeaderboardFn) window.loadLeaderboardFn();
+}
+function showReviewPage() {
+  if (window.stopTimerFn) window.stopTimerFn(); showPage('reviewScreen'); if (window.renderReviewFn) window.renderReviewFn();
+}
+
+applyLanguage();
+</script>
+
+<!-- ================= FIREBASE LOGIC ================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  initializeFirestore, persistentLocalCache, persistentMultipleTabManager, 
+  collection, getDocs, addDoc, deleteDoc, doc, getDoc, setDoc, updateDoc,
+  query, where, writeBatch, onSnapshot, orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDDdMIl2hdxVOrIpLouJvs_tLxPtPlyIsc",
+  authDomain: "simple-exam-app-sourov.firebaseapp.com",
+  projectId: "simple-exam-app-sourov",
+  storageBucket: "simple-exam-app-sourov.firebasestorage.app",
+  messagingSenderId: "29147224189",
+  appId: "1:29147224189:web:af1b89529e010b97a73914",
+  measurementId: "G-CPTBBV8MYS"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+
+let questions = [], current = 0, marks = 0;
+let timer = null, timeLeft = 0, totalTime = 0, answered = false;
+let resultSaved = false, userAnswers = [];
+let examStartTime = 0;
+let userChatUnsubscribe = null;
+let adminChatUnsubscribe = null;
+
+window.getCorrectAnswer = function (q) {
+  for (let k in q) { if (k.trim().toLowerCase() === "correct") { const v = String(q[k] || "").trim().toUpperCase(); const m = v.match(/[A-D]/); return m ? m[0] : v; } } return "";
+};
+window.formatTime = function (s) {
+  s = Math.max(0, Math.floor(s));
+  if (s >= 60) { const m = Math.floor(s / 60), r = s % 60; return r === 0 ? m + " মিনিট" : m + " মিনিট " + r + " সেকেন্ড"; }
+  return s + " সেকেন্ড";
+};
+
+async function fetchNotice() {
+  try {
+    const snap = await getDoc(doc(db, "settings", "notice"));
+    if (snap.exists() && snap.data().text && snap.data().text.trim() !== "") {
+      document.getElementById("noticeText").innerText = snap.data().text;
+      document.getElementById("noticeBoard").style.display = "block";
+    }
+  } catch (e) { console.warn(e); }
+}
+fetchNotice();
+
+window.saveNoticeFn = async function (text) { try { await setDoc(doc(db, "settings", "notice"), { text }); } catch (e) { console.error(e); } };
+
+window.saveUserFn = async function (data) {
+  try {
+    await setDoc(doc(db, "users", data.code), {
+      name: data.name, code: data.code, class: data.cls, group: data.grp,
+      time: new Date().toLocaleString("bn-BD"), timestamp: Date.now()
+    });
+  } catch (e) { console.error(e); }
+};
+
+async function loadTimerSetting() {
+  try { const snap = await getDoc(doc(db, "settings", "config")); if (snap.exists()) examTime = snap.data().examTime || 10; } catch (e) { console.warn(e); }
+  const el = document.getElementById("currentTimer"); if (el) el.innerText = examTime;
+}
+window.setTimerFn = async function (sec) {
+  examTime = sec;
+  try { await setDoc(doc(db, "settings", "config"), { examTime: sec }); } catch (e) { console.error(e); }
+  const el = document.getElementById("currentTimer"); if (el) el.innerText = sec;
+  const msg = document.getElementById("timerMsg"); if (msg) msg.innerText = "সেভ হয়েছে ✅";
+  if (window.showToast) showToast("টাইমার সেভ হয়েছে ✅", 'success');
+};
+window.setTimer = function (sec) { window.setTimerFn(sec); };
+window.setCustomTimer = function () {
+  const m = parseInt(document.getElementById("customMin").value || "0"); const s = parseInt(document.getElementById("customSec").value || "0");
+  const total = (m * 60) + s; if (total <= 0) { if (window.showToast) showToast("সঠিক সময় দিন!", 'warn'); return; }
+  window.setTimerFn(total);
+};
+
+async function loadAll() {
+  try {
+    if (window.renderUserSubjects) document.getElementById("subjectListContainer").innerHTML = "<p style='text-align:center;color:#666;'>⏳ প্রশ্ন লোড হচ্ছে, অপেক্ষা করুন...</p>";
+    const snap = await getDocs(collection(db, "questions"));
+    const all = [];
+    snap.forEach(d => {
+      const data = d.data(); data._id = d.id;
+      if (!data.subject) data.subject = "Physics"; if (!data.class) data.class = "HSC"; if (!data.group) data.group = "Science";
+      all.push(data);
+    });
+    window._allQ = all;
+    if (window.renderUserSubjects) window.renderUserSubjects();
+  } catch (e) { console.error(e); }
+  loadTimerSetting();
+}
+
+window.startExamFromInstFn = function (pendingQuestions, mode) {
+  currentSubject = (window._pendingMixedQuestions) ? "Mixed" : currentSubject;
+  questions = pendingQuestions; resultSaved = false; current = 0; marks = 0; answered = false; userAnswers = []; examStartTime = Date.now();
+  ['score', 'timeTakenText'].forEach(id => { const el = document.getElementById(id); if (el) { el.innerText = ''; el.style.display = 'none'; } });
+  ['backBtn', 'next', 'skipReportBox', 'reviewBtn', 'resultActions', 'prevBtn'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+  document.getElementById("timeTakenText").style.display = "none";
+  window.saveResumeState(); showQuestion();
+  if (mode === 'test') startTotalTimer();
+  else { document.getElementById("timer").innerText = "📖 প্র্যাকটিস মোড"; document.getElementById("timer").style.color = "#f59e0b"; }
+  window._pendingMixedQuestions = null;
+};
+
+window.loadResumeExamFn = function (resume) {
+  questions = resume.questions; current = resume.current || 0; marks = resume.marks || 0;
+  userAnswers = resume.userAnswers || []; examStartTime = resume.startTime || Date.now();
+  document.getElementById("examTitle").innerText = resume.subject + (resume.mode === 'practice' ? " (Practice)" : " (Test)");
+  document.getElementById("timeTakenText").style.display = "none"; document.getElementById("prevBtn").style.display = "none";
+  if (resume.mode === 'test') {
+    totalTime = examTime * questions.length;
+    const elapsed = Math.floor((Date.now() - examStartTime) / 1000);
+    const remaining = Math.max(0, totalTime - elapsed);
+    startTotalTimer(remaining);
+  } else { document.getElementById("timer").innerText = "📖 প্র্যাকটিস মোড"; document.getElementById("timer").style.color = "#f59e0b"; }
+  showQuestion();
+};
+
+window.saveResumeState = function () {
+  const state = { active: true, subject: currentSubject, mode: examMode, questions, current, marks, userAnswers, startTime: examStartTime };
+  try { localStorage.setItem("resumeExam", JSON.stringify(state)); } catch (e) { console.warn(e); }
+};
+
+function startTotalTimer(initial) {
+  clearInterval(timer); if (!totalTime) totalTime = examTime * questions.length;
+  timeLeft = (initial !== undefined) ? initial : totalTime;
+  updateTimerUI();
+  timer = setInterval(() => { timeLeft--; updateTimerUI(); if (timeLeft <= 0) { clearInterval(timer); finishExamByTime(); } }, 1000);
+}
+function updateTimerUI() {
+  const el = document.getElementById("timer");
+  el.innerText = "⏰ বাকি সময়: " + window.formatTime(Math.max(0, timeLeft));
+  el.style.color = timeLeft > 10 ? "#2ed573" : "#ff4757";
+}
+
+function showQuestion() {
+  if (current >= questions.length) { showReviewPage(); return; }
+  const q = questions[current];
+  document.getElementById("question").innerText = (current + 1) + ". " + q.question;
+  document.getElementById("result").innerText = ""; document.getElementById("explanationBox").style.display = "none";
+  const imgBox = document.getElementById("questionImageBox");
+  if (q.image) imgBox.innerHTML = `<img src="${window.esc(q.image)}" onerror="this.style.display='none'" style="max-width:100%; border-radius:12px; max-height:200px;">`;
+  else imgBox.innerHTML = "";
+  const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+  document.getElementById("bookmarkBtn").style.filter = bookmarks.some(b => b.question === q.question) ? "grayscale(0%)" : "grayscale(100%)";
+  
+  const optDiv = document.getElementById("options"); optDiv.innerHTML = "";
+  const previousAnswer = userAnswers[current]; const correctAns = window.getCorrectAnswer(q);
+  
+  if (previousAnswer && previousAnswer !== "SKIPPED") {
+    document.getElementById("skipReportBox").style.display = "none";
+    const res = document.getElementById("result");
+    if (previousAnswer === correctAns) { res.innerText = "সঠিক! ✅"; res.style.color = "green"; }
+    else { res.innerText = "ভুল! ❌ সঠিক: " + correctAns; res.style.color = "red"; }
+    if (q.explanation) { document.getElementById("explanationText").innerText = q.explanation; document.getElementById("explanationBox").style.display = "block"; }
+  } else { document.getElementById("skipReportBox").style.display = "flex"; }
+  
+  answered = false;
+  ["A", "B", "C", "D"].forEach(letter => {
+    const btn = document.createElement("button");
+    btn.innerText = letter + ". " + (q["option" + letter] || '');
+    btn.style.cssText = "width:100%;padding:13px;margin:6px 0;border:1px solid #eee;border-radius:12px;background:#f8f9ff;font-size:16px;text-align:left;box-sizing:border-box;";
+    if (previousAnswer === letter) btn.style.background = (letter === correctAns) ? "#c8f7c5" : "#ffc5c5";
+    
+    btn.onclick = () => {
+      userAnswers[current] = letter; document.getElementById("skipReportBox").style.display = "none";
+      marks = 0;
+      for (let i = 0; i < userAnswers.length; i++) { if (userAnswers[i] && userAnswers[i] !== "SKIPPED") { if (userAnswers[i] === window.getCorrectAnswer(questions[i])) marks++; } }
+      const res = document.getElementById("result");
+      Array.from(optDiv.children).forEach(child => child.style.background = "#f8f9ff");
+      if (letter === correctAns) {
+        res.innerText = "সঠিক! ✅"; res.style.color = "green"; btn.style.background = "#c8f7c5";
+        if (window.playCorrectSound) window.playCorrectSound();
+      } else {
+        res.innerText = "ভুল! ❌ সঠিক: " + correctAns; res.style.color = "red"; btn.style.background = "#ffc5c5";
+        if (window.playWrongSound) window.playWrongSound();
+        const mis = JSON.parse(localStorage.getItem("mistakes") || "[]");
+        mis.push({ q: q.question, ans: correctAns, your: letter }); try { localStorage.setItem("mistakes", JSON.stringify(mis)); } catch (e) {}
+      }
+      if (q.explanation) { document.getElementById("explanationText").innerText = q.explanation; document.getElementById("explanationBox").style.display = "block"; }
+      if (current === questions.length - 1) { document.getElementById("reviewBtn").style.display = "block"; document.getElementById("next").style.display = "none"; }
+      else { document.getElementById("next").style.display = "block"; document.getElementById("reviewBtn").style.display = "none"; }
+      window.saveResumeState();
+    };
+    optDiv.appendChild(btn);
+  });
+  document.getElementById("prevBtn").style.display = (current > 0) ? "block" : "none";
+  document.getElementById("next").style.display = (current < questions.length - 1) ? "block" : "none";
+  document.getElementById("reviewBtn").style.display = (current === questions.length - 1) ? "block" : "none";
+}
+
+window.nextQ = function () { if (current < questions.length - 1) { current++; answered = false; document.getElementById("next").style.display = "none"; document.getElementById("prevBtn").style.display = "none"; window.saveResumeState(); showQuestion(); } };
+window.prevQ = function () { if (current > 0) { current--; answered = false; document.getElementById("next").style.display = "none"; document.getElementById("prevBtn").style.display = "none"; window.saveResumeState(); showQuestion(); } };
+window.skipQ = function () {
+  if (answered) return; answered = true; userAnswers[current] = "SKIPPED";
+  if (current < questions.length - 1) { current++; answered = false; document.getElementById("skipReportBox").style.display = "none"; window.saveResumeState(); showQuestion(); }
+  else { showReviewPage(); }
+};
+
+window.toggleBookmark = function () {
+  if (current >= questions.length) return;
+  const q = questions[current]; let bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+  const existingIdx = bookmarks.findIndex(b => b.question === q.question);
+  const btn = document.getElementById("bookmarkBtn");
+  if (existingIdx > -1) { bookmarks.splice(existingIdx, 1); btn.style.filter = "grayscale(100%)"; if (window.showToast) showToast("বুকমার্ক রিমুভ করা হয়েছে!", 'info'); }
+  else { bookmarks.push(q); btn.style.filter = "grayscale(0%)"; if (window.showToast) showToast("বুকমার্ক করা হয়েছে!", 'success'); }
+  try { localStorage.setItem("bookmarks", JSON.stringify(bookmarks)); } catch (e) { console.warn(e); }
+};
+
+window.reportQ = async function () {
+  if (current >= questions.length) return;
+  const q = questions[current]; const reason = prompt('রিপোর্টের কারণ লিখুন (যেমন: ভুল উত্তর, ভুল বানান):');
+  if (!reason || !reason.trim()) return;
+  try {
+    await addDoc(collection(db, "reports"), { question: q.question, reason: reason.trim(), name: localStorage.getItem("studentName") || "Unknown", code: localStorage.getItem("studentCode") || "Unknown", time: new Date().toLocaleString("bn-BD"), timestamp: Date.now() });
+    if (window.showToast) showToast("রিপোর্ট পাঠানো হয়েছে ✅", 'success');
+  } catch (e) { if (window.showToast) showToast("রিপোর্ট পাঠাতে ব্যর্থ", 'error'); }
+};
+
+window.downloadResultImage = function () {
+  const node = document.getElementById("scoreContainer");
+  if (!window.html2canvas) { if (window.showToast) showToast("লাইব্রেরি লোড হয়নি", 'error'); return; }
+  html2canvas(node).then(canvas => {
+    const link = document.createElement('a'); link.download = 'My_Result.png'; link.href = canvas.toDataURL(); link.click();
+  }).catch(() => { if (window.showToast) showToast("ছবি তৈরি করা যায়নি", 'error'); });
+};
+
+window.renderReviewFn = function () {
+  const listDiv = document.getElementById("reviewList"); listDiv.innerHTML = "";
+  questions.forEach((q, i) => {
+    const ans = window.getCorrectAnswer(q); const uAns = userAnswers[i] || "NOT ANSWERED";
+    let bgColor = "#f8f9ff", borderCol = "#ddd";
+    if (uAns === "NOT ANSWERED" || uAns === "SKIPPED") { bgColor = "#fff3e0"; borderCol = "#f59e0b"; }
+    else if (uAns === ans) { bgColor = "#f0fff4"; borderCol = "#28a745"; }
+    else { bgColor = "#fff0f0"; borderCol = "#ef4444"; }
+    let optionsHTML = "";
+    ["A", "B", "C", "D"].forEach(opt => {
+      const isCorrect = (opt === ans); const isUser = (opt === uAns);
+      const fontStyle = (isCorrect || isUser) ? "font-weight:bold;" : "";
+      const color = isCorrect ? "green" : (isUser && !isCorrect ? "red" : "#333");
+      const icon = isCorrect ? "✅ " : (isUser ? "❌ " : "⚪ ");
+      optionsHTML += `<div style="padding:5px; color:${color}; ${fontStyle}">${icon} ${opt}) ${window.esc(q["option" + opt])}</div>`;
+    });
+    listDiv.innerHTML += `<div style="background:${bgColor}; padding:15px; margin-bottom:12px; border-radius:12px; border-left:5px solid ${borderCol};"><b>প্রশ্ন ${i + 1}: ${window.esc(q.question)}</b><div style="margin-top:8px;">${optionsHTML}</div></div>`;
+  });
+};
+
+window.submitFinalExam = function () {
+  showPage('examScreen'); document.getElementById("question").innerText = "পরীক্ষা শেষ! 🎉";
+  document.getElementById("options").innerHTML = ""; document.getElementById("timer").innerText = "শেষ!";
+  let timeTakenSec = 0; if (examMode === 'test') timeTakenSec = totalTime - Math.max(0, timeLeft);
+  document.getElementById("score").innerText = "তোমার স্কোর: " + marks + " / " + questions.length;
+  if (examMode === 'test') { const t = document.getElementById("timeTakenText"); t.style.display = "block"; t.innerText = "⏱️ সময় লেগেছে: " + window.formatTime(timeTakenSec); }
+  document.getElementById("backBtn").style.display = "block"; document.getElementById("resultActions").style.display = "block";
+  document.getElementById("next").style.display = "none"; document.getElementById("prevBtn").style.display = "none";
+  isExamActive = false; localStorage.removeItem("resumeExam"); updateStreak(); saveResult(timeTakenSec);
+};
+
+function finishExamByTime() {
+  const name = localStorage.getItem("studentName") || "বন্ধু";
+  document.getElementById("question").innerText = "সময় শেষ! ⏰"; document.getElementById("options").innerHTML = ""; document.getElementById("result").innerText = ""; document.getElementById("timer").innerText = "সময় শেষ!";
+  document.getElementById("next").style.display = "none"; document.getElementById("skipReportBox").style.display = "none"; document.getElementById("reviewBtn").style.display = "none";
+  document.getElementById("explanationBox").style.display = "none"; document.getElementById("questionImageBox").innerHTML = ""; document.getElementById("bookmarkBtn").style.display = "none"; document.getElementById("prevBtn").style.display = "none";
+  document.getElementById("score").innerText = name + ", " + currentSubject + " এ তোমার স্কোর: " + marks + " / " + questions.length;
+  const t = document.getElementById("timeTakenText"); t.style.display = "block"; t.innerText = "⏱️ সময় লেগেছে: " + window.formatTime(totalTime);
+  document.getElementById("bar").style.width = "100%"; document.getElementById("backBtn").style.display = "block"; document.getElementById("resultActions").style.display = "block";
+  isExamActive = false; localStorage.removeItem("resumeExam"); updateStreak(); saveResult(totalTime);
+}
+window.stopTimerFn = function () { clearInterval(timer); };
+
+function updateStreak() {
+  const today = new Date().toDateString(); const lastExam = localStorage.getItem("lastExamDate");
+  let streak = parseInt(localStorage.getItem("streakCount") || "0");
+  if (lastExam === today) return;
+  if (lastExam) {
+    const lastDate = new Date(lastExam); const currDate = new Date(today);
+    const diffDays = Math.ceil(Math.abs(currDate - lastDate) / (1000 * 60 * 60 * 24));
+    streak = (diffDays === 1) ? streak + 1 : 1;
+  } else { streak = 1; }
+  localStorage.setItem("lastExamDate", today); localStorage.setItem("streakCount", streak);
+}
+
+// ========== NEW INFORMATIVE DASHBOARD ==========
+window.loadDashboardFn = function () {
+  const arr = JSON.parse(localStorage.getItem("myResults") || "[]");
+  const totalExams = arr.length;
+  let totalCorrect = 0; let totalQ = 0;
+  arr.forEach(r => { totalCorrect += r.marks; totalQ += r.total; });
+  const avgAccuracy = totalQ ? Math.round((totalCorrect / totalQ) * 100) : 0;
+  
+  let bestScore = 0;
+  arr.forEach(r => { const pct = r.total > 0 ? (r.marks/r.total)*100 : 0; if(pct > bestScore) bestScore = pct; });
+  
+  const wrongCount = totalQ - totalCorrect;
+  
+  document.getElementById("otherBody").innerHTML = `
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+      <div style="background:#e3f2fd; padding:15px; border-radius:12px; text-align:center;">
+         <h3 style="margin:0; color:#007bff; font-size:24px;">${totalExams}</h3>
+         <small style="font-weight:bold; color:#555;">মোট পরীক্ষা</small>
+      </div>
+      <div style="background:#e8f5e9; padding:15px; border-radius:12px; text-align:center;">
+         <h3 style="margin:0; color:#28a745; font-size:24px;">${avgAccuracy}%</h3>
+         <small style="font-weight:bold; color:#555;">সামগ্রিক অ্যাকুরেসি</small>
+      </div>
+      <div style="background:#fef08a; padding:15px; border-radius:12px; text-align:center; grid-column:span 2;">
+         <h3 style="margin:0; color:#b45309; font-size:24px;">${Math.round(bestScore)}%</h3>
+         <small style="font-weight:bold; color:#555;">সর্বোচ্চ স্কোর</small>
+      </div>
+    </div>
+    
+    <div style="background:white; padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #eee;">
+       <h4 style="margin-top:0; text-align:center; color:#333;">সঠিক বনাম ভুল উত্তর</h4>
+       <div style="display:flex; justify-content:center;">
+          <canvas id="doughnutChart" style="max-height:200px; max-width:200px;"></canvas>
+       </div>
+    </div>
+    
+    <div style="background:white; padding:15px; border-radius:12px; border:1px solid #eee;">
+       <h4 style="margin-top:0; text-align:center; color:#333;">সাম্প্রতিক স্কোর ট্রেন্ড</h4>
+       <canvas id="trendChart" style="width:100%; max-height:200px;"></canvas>
+    </div>
+  `;
+  
+  if (totalExams > 0 && window.Chart) {
+    // Doughnut Chart
+    const ctx1 = document.getElementById('doughnutChart').getContext('2d');
+    new Chart(ctx1, {
+      type: 'doughnut',
+      data: {
+        labels: ['সঠিক', 'ভুল/বাদ'],
+        datasets: [{
+          data: [totalCorrect, wrongCount],
+          backgroundColor: ['#10b981', '#ef4444'],
+          borderWidth: 0
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
+    
+    // Trend Chart
+    const last6 = arr.slice(-6);
+    const ctx2 = document.getElementById('trendChart').getContext('2d');
+    new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: last6.map((_, i) => 'পরীক্ষা ' + (arr.length - last6.length + i + 1)),
+        datasets: [{
+          label: 'Score (%)',
+          data: last6.map(r => Math.round((r.marks / r.total) * 100)),
+          backgroundColor: '#3b82f6',
+          borderRadius: 6
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+    });
+  }
+};
+
+window.loadAdminDashboardFn = async function () {
+  try {
+    const [resultsSnap, usersSnap] = await Promise.all([getDocs(collection(db, "results")), getDocs(collection(db, "users"))]);
+    let totalExams = 0; const uniqueUsers = new Set();
+    resultsSnap.forEach(d => { totalExams++; const r = d.data(); uniqueUsers.add((r.code || r.name || '').toUpperCase()); });
+    usersSnap.forEach(d => uniqueUsers.add(d.id));
+    document.getElementById("adminTotalUsers").innerText = uniqueUsers.size; document.getElementById("adminTotalExams").innerText = totalExams;
+  } catch (e) { console.error(e); }
+};
+
+window.loadProfileFn = async function (name, code) {
+  document.getElementById("profStats").innerHTML = "লোড হচ্ছে..."; document.getElementById("profSubjectStats").innerHTML = ""; document.getElementById("profRecentExams").innerHTML = "";
+  try {
+    const q = query(collection(db, "results"), where("code", "==", code)); const snap = await getDocs(q);
+    const myResults = []; snap.forEach(d => myResults.push(d.data()));
+    if (myResults.length === 0) { document.getElementById("profStats").innerHTML = "<p style='text-align:center;color:#666;'>আপনি এখনো কোনো পরীক্ষা দেননি।</p>"; return; }
+    
+    let totalQ = 0, totalC = 0; const subjects = {};
+    myResults.forEach(r => {
+      totalQ += r.total; totalC += r.marks;
+      if (!subjects[r.subject]) subjects[r.subject] = { marks: 0, total: 0, count: 0 };
+      subjects[r.subject].marks += r.marks; subjects[r.subject].total += r.total; subjects[r.subject].count++;
+    });
+    const overallAvg = Math.round((totalC / totalQ) * 100);
+    
+    document.getElementById("profStats").innerHTML = `<div style="display:flex; gap:10px; margin-bottom:15px;">
+      <div style="flex:1; background:#e3f2fd; padding:15px; border-radius:12px; text-align:center;">
+        <h3 style="margin:0; color:#007bff;">${myResults.length}</h3><small style="font-weight:bold; color:#555;">মোট পরীক্ষা</small>
+      </div>
+      <div style="flex:1; background:#e8f5e9; padding:15px; border-radius:12px; text-align:center;">
+        <h3 style="margin:0; color:#28a745;">${overallAvg}%</h3><small style="font-weight:bold; color:#555;">সামগ্রিক গড়</small>
+      </div>
+    </div>`;
+    
+    let subjHTML = "<h3 style='border-bottom:2px solid #eee; padding-bottom:5px;'>সাবজেক্ট বিশ্লেষণ</h3>";
+    for (let sub in subjects) {
+      const s = subjects[sub]; const pct = Math.round((s.marks / s.total) * 100);
+      const color = pct >= 80 ? "#28a745" : (pct >= 50 ? "#f59e0b" : "#ef4444");
+      const label = pct >= 80 ? "দারুণ 💪" : (pct >= 50 ? "মাঝারি 😐" : "দুর্বল 📉");
+      subjHTML += `<div style="background:#f8f9ff; padding:12px; border-radius:12px; margin-bottom:10px; border:1px solid #eee;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><b>${window.esc(sub)}</b><span style="color:${color}; font-weight:bold;">${pct}% (${label})</span></div>
+        <small style="color:#666; display:block; margin-bottom:6px;">পরীক্ষা: ${s.count} বার</small>
+        <div style="height:8px; background:#e0e0e0; border-radius:5px;"><div style="height:100%; background:${color}; width:${pct}%; border-radius:5px;"></div></div>
+      </div>`;
+    }
+    document.getElementById("profSubjectStats").innerHTML = subjHTML;
+    let recentHTML = "<h3 style='border-bottom:2px solid #eee; padding-bottom:5px;'>সর্বশেষ পরীক্ষাগুলো</h3>";
+    myResults.slice().reverse().slice(0, 5).forEach(r => {
+      const pct = Math.round((r.marks / r.total) * 100);
+      recentHTML += `<div style="background:white; padding:12px; border:1px solid #ddd; border-left:4px solid #0ea5e9; border-radius:12px; margin-bottom:8px;"><div style="display:flex; justify-content:space-between;"><b>${window.esc(r.subject)}</b><b style="color:#0ea5e9;">${r.marks}/${r.total} (${pct}%)</b></div><small style="color:#888;">${window.esc(r.time)}</small></div>`;
+    });
+    document.getElementById("profRecentExams").innerHTML = recentHTML;
+  } catch (e) { console.error(e); document.getElementById("profStats").innerHTML = "<p style='color:red;'>লোড করতে সমস্যা।</p>"; }
+};
+
+async function saveResult(timeTakenSec = 0) {
+  if (resultSaved) return; resultSaved = true;
+  const name = localStorage.getItem("studentName") || "Unknown"; const code = (localStorage.getItem("studentCode") || "").toUpperCase();
+  const pic = localStorage.getItem("studentPic") || ""; const cls = localStorage.getItem("studentClass") || "HSC"; const grp = localStorage.getItem("studentGroup") || "Science";
+  const my = JSON.parse(localStorage.getItem("myResults") || "[]");
+  my.push({ subject: currentSubject, marks, total: questions.length, code, pic, class: cls, group: grp, time: new Date().toLocaleString("bn-BD") });
+  try { localStorage.setItem("myResults", JSON.stringify(my)); } catch (e) { console.warn(e); }
+  
+  try {
+    await addDoc(collection(db, "results"), { name, code, pic, subject: currentSubject, marks, total: questions.length, class: cls, group: grp, timeTaken: timeTakenSec, time: new Date().toLocaleString("bn-BD"), timestamp: Date.now() });
+    if (window.showToast) showToast("রেজাল্ট সেভ হয়েছে ✅", 'success');
+  } catch (e) { console.error(e); if (window.showToast) showToast("রেজাল্ট সেভ হয়নি: " + e.message, 'error', 4000); }
+}
+
+window.loadListFn = async () => {
+  const fClass = document.getElementById("filterClass").value; const fGroup = document.getElementById("filterGroup").value; const fSub = document.getElementById("filterSubject").value;
+  const search = (document.getElementById("searchList")?.value || "").toLowerCase();
+  const listDiv = document.getElementById("qList"); listDiv.innerHTML = "লোড হচ্ছে...";
+  
+  try {
+    const snap = await getDocs(collection(db, "questions")); const allQ = [];
+    snap.forEach(d => { const data = d.data(); data._id = d.id; allQ.push(data); });
+    const dupMap = {}; allQ.forEach(q => { const key = (q.question || '').trim().toLowerCase(); dupMap[key] = (dupMap[key] || 0) + 1; });
+    listDiv.innerHTML = ""; let count = 0;
+    
+    allQ.forEach(q => {
+      const qClass = q.class || "HSC"; const qGroup = q.group || "Science"; const qSub = q.subject || "Physics";
+      if (fClass !== "All" && qClass !== fClass) return; if (fGroup !== "All" && qGroup !== fGroup) return; if (fSub !== "All" && qSub !== fSub) return;
+      if (search && !q.question.toLowerCase().includes(search)) return;
+      const isDuplicate = dupMap[(q.question || '').trim().toLowerCase()] > 1;
+      const div = document.createElement("div");
+      div.style.cssText = "background:#f8f9ff;padding:12px;border-radius:12px;margin:8px 0;border:1px solid #eee" + (isDuplicate ? "; border-left:5px solid #ef4444;" : "");
+      div.innerHTML = `<small style='color:#4a00e0;font-weight:bold'>${window.esc(qClass)} - ${window.esc(qGroup)} | ${window.esc(qSub)} | ${window.esc(q.difficulty || 'Medium')} ${isDuplicate ? '<span style="color:red; font-size:12px;">(⚠️ Repeated)</span>' : ''}</small><br><b>${window.esc(q.question)}</b><br>সঠিক: ${window.esc(window.getCorrectAnswer(q))}<br>`;
+      
+      const edit = document.createElement("button"); edit.innerText = "✏️ এডিট";
+      edit.style.cssText = "width:100%;padding:8px;border:none;border-radius:8px;background:#f59e0b;color:white;margin-top:6px;";
+      edit.onclick = () => {
+        showAdminPage('addBox'); editingQId = q._id;
+        document.getElementById("addBox").querySelector('h3').innerText = "প্রশ্ন এডিট করুন";
+        document.getElementById("saveBtn").innerText = "Update করো ✅";
+        document.getElementById("cancelEditBtn").style.display = "block";
+        document.getElementById("adminClass").value = qClass; document.getElementById("adminGroup").value = qGroup; updateAdminSubjects();
+        setTimeout(() => { document.getElementById("subjectSelect").value = qSub; }, 50);
+        document.getElementById("difficultySelect").value = q.difficulty || "Medium"; document.getElementById("qText").value = q.question; document.getElementById("qImage").value = q.image || "";
+        document.getElementById("optA").value = q.optionA; document.getElementById("optB").value = q.optionB; document.getElementById("optC").value = q.optionC; document.getElementById("optD").value = q.optionD;
+        document.getElementById("correctAns").value = window.getCorrectAnswer(q); document.getElementById("qExplain").value = q.explanation || "";
+      };
+      
+      const del = document.createElement("button"); del.innerText = "🗑️ ডিলিট";
+      del.style.cssText = "width:100%;padding:8px;border:none;border-radius:8px;background:#ff4757;color:white;margin-top:6px;";
+      del.onclick = async () => { if (confirm("সত্যিই ডিলিট করতে চান?")) { try { await deleteDoc(doc(db, "questions", q._id)); window.loadListFn(); loadAll(); } catch (e) { console.error(e); } } };
+      
+      div.appendChild(edit); div.appendChild(del); listDiv.appendChild(div); count++;
+    });
+    if (count === 0) listDiv.innerHTML = "কোনো প্রশ্ন পাওয়া যায়নি";
+  } catch (e) { listDiv.innerHTML = "<span style='color:red;'>লোড করতে সমস্যা: " + window.esc(e.message) + "</span>"; }
+};
+
+window.saveQuestionFn = async function () {
+  const cls = document.getElementById("adminClass").value; const grp = document.getElementById("adminGroup").value; const sub = document.getElementById("subjectSelect").value;
+  const diff = document.getElementById("difficultySelect").value; const qText = document.getElementById("qText").value.trim(); const qImg = document.getElementById("qImage").value.trim();
+  const a = document.getElementById("optA").value.trim(); const b = document.getElementById("optB").value.trim(); const c = document.getElementById("optC").value.trim(); const d = document.getElementById("optD").value.trim();
+  const correct = document.getElementById("correctAns").value; const explain = document.getElementById("qExplain").value.trim(); const msgEl = document.getElementById("saveMsg");
+  
+  if (!qText || !a || !b || !c || !d) { msgEl.style.color = "red"; msgEl.innerText = "সব ঘর পূরণ করুন!"; return; }
+  const payload = { question: qText, optionA: a, optionB: b, optionC: c, optionD: d, Correct: correct, explanation: explain, difficulty: diff, class: cls, group: grp, subject: sub, image: qImg, updatedAt: Date.now() };
+  msgEl.style.color = "blue"; msgEl.innerText = "সেভ হচ্ছে...";
+  
+  try {
+    if (editingQId) {
+      await updateDoc(doc(db, "questions", editingQId), payload); msgEl.style.color = "green"; msgEl.innerText = "আপডেট সফল ✅"; setTimeout(() => { cancelEdit(); }, 1000);
+    } else {
+      payload.createdAt = Date.now(); await addDoc(collection(db, "questions"), payload); msgEl.style.color = "green"; msgEl.innerText = "সেভ সফল ✅";
+      ['qText', 'qImage', 'optA', 'optB', 'optC', 'optD', 'qExplain'].forEach(id => { document.getElementById(id).value = ''; });
+    }
+    loadAll(); setTimeout(() => { msgEl.innerText = ''; }, 2000);
+  } catch (e) { msgEl.style.color = "red"; msgEl.innerText = "ব্যর্থ: " + e.message; }
+};
+
+window.bulkSaveFn = async function () {
+  const cls = document.getElementById("bulkClass").value; const grp = document.getElementById("bulkGroup").value; const sub = document.getElementById("bulkSubject").value;
+  const jsonText = document.getElementById("bulkJSON").value.trim(); const msgEl = document.getElementById("bulkMsg");
+  if (!jsonText) { msgEl.style.color = "red"; msgEl.innerText = "JSON দিন!"; return; }
+  let arr; try { arr = JSON.parse(jsonText); } catch (e) { msgEl.style.color = "red"; msgEl.innerText = "ভুল JSON: " + e.message; return; }
+  if (!Array.isArray(arr) || arr.length === 0) { msgEl.style.color = "red"; msgEl.innerText = "অ্যারে দরকার!"; return; }
+  msgEl.style.color = "blue"; msgEl.innerText = `ইম্পোর্ট হচ্ছে (${arr.length})...`;
+  
+  try {
+    for (let i = 0; i < arr.length; i += 500) {
+      const batch = writeBatch(db);
+      arr.slice(i, i + 500).forEach(item => {
+        const ref = doc(collection(db, "questions"));
+        batch.set(ref, { question: item.question || '', optionA: item.optionA || '', optionB: item.optionB || '', optionC: item.optionC || '', optionD: item.optionD || '', Correct: (item.Correct || item.correct || 'A').toString().toUpperCase().match(/[A-D]/)?.[0] || 'A', explanation: item.explanation || '', difficulty: item.difficulty || 'Medium', class: cls, group: grp, subject: sub, image: item.image || '', createdAt: Date.now() });
+      });
+      await batch.commit();
+    }
+    msgEl.style.color = "green"; msgEl.innerText = `✅ ${arr.length} টি প্রশ্ন যোগ হয়েছে`; document.getElementById("bulkJSON").value = ""; loadAll();
+  } catch (e) { msgEl.style.color = "red"; msgEl.innerText = "ব্যর্থ: " + e.message; }
+};
+
+window.loadRepeatedFn = async () => {
+  const search = (document.getElementById("searchRepeated")?.value || "").toLowerCase(); const listDiv = document.getElementById("repeatedList"); listDiv.innerHTML = "লোড হচ্ছে...";
+  if (document.getElementById('selectAllRepeatedBtn')) document.getElementById('selectAllRepeatedBtn').innerText = "সব সিলেক্ট"; window.isAllSelected = false;
+  try {
+    const snap = await getDocs(collection(db, "questions")); const allQ = []; snap.forEach(d => { const data = d.data(); data._id = d.id; allQ.push(data); });
+    const grouped = {}; allQ.forEach(q => { if (search && !q.question.toLowerCase().includes(search)) return; const key = (q.question || "").trim().toLowerCase(); if (!grouped[key]) grouped[key] = []; grouped[key].push(q); });
+    listDiv.innerHTML = ""; let count = 0;
+    for (let key in grouped) {
+      if (grouped[key].length > 1) {
+        count++; const group = grouped[key];
+        let html = `<div style="background:#fff0f0; padding:12px; border-radius:12px; margin-bottom:10px; border:1px solid #ef4444;"><div style="font-weight:bold; color:#ef4444; margin-bottom:5px;">⚠️ ${group.length} বার রিপিট হয়েছে</div><b>${window.esc(group[0].question)}</b><br><small>Class: ${window.esc(group[0].class || 'HSC')} | Group: ${window.esc(group[0].group || 'Science')} | Subject: ${window.esc(group[0].subject)}</small><div style="margin-top:8px;">`;
+        group.forEach(q => {
+          html += `<div style="background:white; padding:8px; border-radius:8px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;"><div style="display:flex; align-items:center; gap:5px;"><input type="checkbox" class="rep-checkbox" value="${window.esc(q._id)}" style="width:18px; height:18px;"><span style="font-size:12px; color:#666;">ID: ${window.esc(q._id.substring(0, 6))}... | ${window.esc(q.difficulty || '')}</span></div><div><button onclick="editRepeatedQ('${window.esc(q._id)}')" style="padding:5px 10px; border:none; border-radius:5px; background:#f59e0b; color:white; font-size:12px;">✏️ এডিট</button><button onclick="deleteRepeatedQ('${window.esc(q._id)}')" style="padding:5px 10px; border:none; border-radius:5px; background:#ef4444; color:white; font-size:12px;">🗑️ ডিলিট</button></div></div>`;
+        });
+        html += `</div></div>`; listDiv.innerHTML += html;
+      }
+    }
+    if (count === 0) listDiv.innerHTML = "কোনো রিপিট প্রশ্ন পাওয়া যায়নি! 🎉";
+  } catch (e) { listDiv.innerHTML = "<span style='color:red;'>লোড ব্যর্থ: " + window.esc(e.message) + "</span>"; }
+};
+
+window.toggleSelectAllRepeated = function () {
+  const cbs = document.querySelectorAll('.rep-checkbox'); window.isAllSelected = !window.isAllSelected;
+  cbs.forEach(cb => cb.checked = window.isAllSelected); document.getElementById("selectAllRepeatedBtn").innerText = window.isAllSelected ? "আনসিলেক্ট" : "সব সিলেক্ট";
+};
+
+window.deleteSelectedRepeated = async function () {
+  const cbs = document.querySelectorAll('.rep-checkbox:checked');
+  if (cbs.length === 0) { if (window.showToast) showToast("কোনো প্রশ্ন সিলেক্ট করা হয়নি!", 'warn'); return; }
+  if (!confirm(`আপনি কি ${cbs.length} টি প্রশ্ন ডিলিট করতে চান?`)) return;
+  try {
+    for (let i = 0; i < cbs.length; i += 500) {
+      const batch = writeBatch(db); Array.from(cbs).slice(i, i + 500).forEach(cb => { batch.delete(doc(db, "questions", cb.value)); });
+      await batch.commit();
+    }
+    if (window.showToast) showToast(`${cbs.length} টি ডিলিট ✅`, 'success'); window.loadRepeatedFn(); loadAll();
+  } catch (e) { if (window.showToast) showToast("ব্যর্থ: " + e.message, 'error'); }
+};
+
+window.editRepeatedQ = async function (id) {
+  try {
+    const snap = await getDoc(doc(db, "questions", id)); if (!snap.exists()) { if (window.showToast) showToast("প্রশ্ন পাওয়া যায়নি", 'error'); return; }
+    const q = snap.data(); showAdminPage('addBox'); editingQId = id;
+    document.getElementById("addBox").querySelector('h3').innerText = "প্রশ্ন এডিট করুন"; document.getElementById("saveBtn").innerText = "Update করো ✅"; document.getElementById("cancelEditBtn").style.display = "block";
+    document.getElementById("adminClass").value = q.class || 'HSC'; document.getElementById("adminGroup").value = q.group || 'Science'; updateAdminSubjects();
+    setTimeout(() => { document.getElementById("subjectSelect").value = q.subject || 'Physics'; }, 50);
+    document.getElementById("difficultySelect").value = q.difficulty || "Medium"; document.getElementById("qText").value = q.question || ''; document.getElementById("qImage").value = q.image || '';
+    document.getElementById("optA").value = q.optionA || ''; document.getElementById("optB").value = q.optionB || ''; document.getElementById("optC").value = q.optionC || ''; document.getElementById("optD").value = q.optionD || '';
+    document.getElementById("correctAns").value = window.getCorrectAnswer(q); document.getElementById("qExplain").value = q.explanation || '';
+  } catch (e) { if (window.showToast) showToast("সমস্যা: " + e.message, 'error'); }
+};
+
+window.deleteRepeatedQ = async function (id) {
+  if (!confirm("সত্যিই ডিলিট করতে চান?")) return;
+  try { await deleteDoc(doc(db, "questions", id)); if (window.showToast) showToast("ডিলিট হয়েছে ✅", 'success'); window.loadRepeatedFn(); loadAll(); }
+  catch (e) { if (window.showToast) showToast("ব্যর্থ: " + e.message, 'error'); }
+};
+
+window.loadResultsFn = async function () {
+  const listDiv = document.getElementById("resultList"); const totalDiv = document.getElementById("totalResult"); listDiv.innerHTML = "লোড হচ্ছে..."; totalDiv.innerText = "";
+  try {
+    const snap = await getDocs(collection(db, "results")); const arr = []; snap.forEach(d => arr.push({ ...d.data(), _id: d.id }));
+    totalDiv.innerText = `মোট ${arr.length} টি রেজাল্ট`;
+    if (arr.length === 0) { listDiv.innerHTML = "কোনো রেজাল্ট নেই।"; return; }
+    arr.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    let html = "";
+    arr.slice(0, 100).forEach(r => {
+      const pct = Math.round((r.marks / r.total) * 100);
+      html += `<div style="background:#f8f9ff;padding:10px;border-radius:10px;margin-bottom:8px;border-left:4px solid #4a00e0;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><b>${window.esc(r.name || 'Unknown')}</b><b style="color:#4a00e0;">${r.marks}/${r.total} (${pct}%)</b></div><small style="color:#666;display:block;">${window.esc(r.subject)} | ${window.esc(r.class || '')}-${window.esc(r.group || '')} | ${window.esc(r.code || '')}</small><small style="color:#999;">${window.esc(r.time || '')}</small></div>`;
+    });
+    listDiv.innerHTML = html; window._resultsCache = arr;
+  } catch (e) { listDiv.innerHTML = "<span style='color:red;'>লোড ব্যর্থ: " + window.esc(e.message) + "</span>"; }
+};
+
+window.exportResultsToCSV = async function () {
+  try {
+    const arr = window._resultsCache || [];
+    if (arr.length === 0) { const snap = await getDocs(collection(db, "results")); snap.forEach(d => arr.push(d.data())); }
+    if (arr.length === 0) { if (window.showToast) showToast("কোনো রেজাল্ট নেই", 'warn'); return; }
+    const headers = ['name', 'code', 'class', 'group', 'subject', 'marks', 'total', 'time'];
+    const rows = arr.map(r => headers.map(h => `"${(r[h] ?? '').toString().replace(/"/g, '""')}"`).join(','));
+    const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'results_' + new Date().toISOString().slice(0, 10) + '.csv'; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  } catch (e) { if (window.showToast) showToast("ব্যর্থ: " + e.message, 'error'); }
+};
+
+window.loadPendingFn = async function () {
+  const listDiv = document.getElementById("pendingList"); listDiv.innerHTML = "লোড হচ্ছে...";
+  try {
+    const snap = await getDocs(collection(db, "suggestions")); const arr = []; snap.forEach(d => arr.push({ ...d.data(), _id: d.id }));
+    if (arr.length === 0) { listDiv.innerHTML = "কোনো সাজেশন নেই।"; return; }
+    arr.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    let html = "";
+    arr.forEach(s => {
+      html += `<div style="background:#f4e8ff;padding:12px;border-radius:12px;margin-bottom:10px;border-left:4px solid #8b5cf6;"><b>${window.esc(s.question)}</b><br><small>A) ${window.esc(s.optionA)} | B) ${window.esc(s.optionB)} | C) ${window.esc(s.optionC)} | D) ${window.esc(s.optionD)}</small><br><small style="color:#666;">সঠিক: <b>${window.esc(s.Correct || 'A')}</b> | ${window.esc(s.class)}-${window.esc(s.group)} | ${window.esc(s.subject)}</small><br><small style="color:#999;">From: ${window.esc(s.name)} (${window.esc(s.code)}) • ${window.esc(s.time)}</small><div style="margin-top:8px;display:flex;gap:5px;"><button onclick="approveSuggestion('${window.esc(s._id)}')" style="flex:1;padding:8px;background:#28a745;color:white;border:none;border-radius:6px;font-weight:bold;font-size:13px;">✅ অ্যাপ্রুভ</button><button onclick="deleteSuggestion('${window.esc(s._id)}')" style="flex:1;padding:8px;background:#ef4444;color:white;border:none;border-radius:6px;font-weight:bold;font-size:13px;">🗑️ ডিলিট</button></div></div>`;
+    });
+    listDiv.innerHTML = html;
+  } catch (e) { listDiv.innerHTML = "<span style='color:red;'>লোড ব্যর্থ: " + window.esc(e.message) + "</span>"; }
+};
+
+window.approveSuggestion = async function (id) {
+  try {
+    const snap = await getDoc(doc(db, "suggestions", id)); if (!snap.exists()) return;
+    const s = snap.data();
+    await addDoc(collection(db, "questions"), { question: s.question, optionA: s.optionA, optionB: s.optionB, optionC: s.optionC, optionD: s.optionD, Correct: s.Correct, class: s.class, group: s.group, subject: s.subject, difficulty: 'Medium', explanation: '', createdAt: Date.now() });
+    await deleteDoc(doc(db, "suggestions", id)); if (window.showToast) showToast("প্রশ্ন যোগ হয়েছে ✅", 'success'); window.loadPendingFn(); loadAll();
+  } catch (e) { if (window.showToast) showToast("ব্যর্থ: " + e.message, 'error'); }
+};
+
+window.deleteSuggestion = async function (id) {
+  if (!confirm("ডিলিট করতে চান?")) return;
+  try { await deleteDoc(doc(db, "suggestions", id)); window.loadPendingFn(); } catch (e) { console.error(e); }
+};
+
+window.submitSuggestion = async function () {
+  const q = document.getElementById('sugQ').value.trim(); const a = document.getElementById('sugA').value.trim(); const b = document.getElementById('sugB').value.trim(); const c = document.getElementById('sugC').value.trim(); const d = document.getElementById('sugD').value.trim();
+  const correct = document.getElementById('sugCorrect').value; const cls = document.getElementById('sugClass').value; const grp = document.getElementById('sugGroup').value; const sub = document.getElementById('sugSubject').value; const msgEl = document.getElementById('sugMsg');
+  if (!q || !a || !b || !c || !d) { msgEl.style.color = 'red'; msgEl.innerText = 'সব ঘর পূরণ করুন!'; return; }
+  msgEl.style.color = 'blue'; msgEl.innerText = 'পাঠানো হচ্ছে...';
+  try {
+    await addDoc(collection(db, 'suggestions'), { question: q, optionA: a, optionB: b, optionC: c, optionD: d, Correct: correct, class: cls, group: grp, subject: sub, name: localStorage.getItem('studentName') || 'Unknown', code: localStorage.getItem('studentCode') || 'Unknown', time: new Date().toLocaleString('bn-BD'), timestamp: Date.now() });
+    msgEl.style.color = 'green'; msgEl.innerText = 'সাজেশন পাঠানো হয়েছে ✅'; setTimeout(() => document.getElementById('suggestModal').style.display = 'none', 1500);
+  } catch (e) { msgEl.style.color = 'red'; msgEl.innerText = 'ব্যর্থ: ' + e.message; }
+};
+
+// ========== CHAT SYSTEM (FIRESTORE LOGIC) ==========
+window.sendChatMsgToDb = async function (userCode, text, sender) {
+  try {
+    const chatRef = doc(db, "messages", userCode);
+    const msgData = { text, sender, timestamp: Date.now(), timeString: new Date().toLocaleTimeString('bn-BD', {hour: '2-digit', minute:'2-digit'}) };
+    
+    // Subcollection-এ মেসেজ সেভ করা
+    await addDoc(collection(chatRef, "chat"), msgData);
+    
+    // মূল ডকুমেন্ট আপডেট করা (লিস্ট দেখানোর জন্য)
+    const userSnap = await getDoc(doc(db, "users", userCode));
+    const userName = userSnap.exists() ? userSnap.data().name : userCode;
+    
+    await setDoc(chatRef, {
+      lastMessage: text,
+      lastTime: msgData.timestamp,
+      name: userName,
+      code: userCode,
+      sender: sender
+    }, { merge: true });
+    
+  } catch (e) { console.error("Chat error:", e); if(window.showToast) showToast("মেসেজ পাঠাতে সমস্যা", 'error'); }
+};
+
+window.listenUserChat = function (userCode) {
+  if (userChatUnsubscribe) userChatUnsubscribe();
+  const chatRef = collection(db, "messages", userCode, "chat");
+  const q = query(chatRef, orderBy("timestamp", "asc"));
+  
+  userChatUnsubscribe = onSnapshot(q, (snap) => {
+    const msgDiv = document.getElementById("userChatMessages");
+    msgDiv.innerHTML = "";
+    snap.forEach(d => {
+      const m = d.data();
+      const isMe = m.sender === 'user';
+      msgDiv.innerHTML += `<div class="msg-bubble ${isMe ? 'msg-user' : 'msg-admin'}">
+         ${window.esc(m.text)}
+         <div style="font-size:10px; opacity:0.7; text-align:right; margin-top:3px;">${m.timeString}</div>
+      </div>`;
+    });
+    msgDiv.scrollTop = msgDiv.scrollHeight;
+  });
+};
+
+window.loadAdminChatList = async function () {
+  const listDiv = document.getElementById("adminChatList");
+  listDiv.innerHTML = "লোড হচ্ছে...";
+  try {
+    const snap = await getDocs(collection(db, "messages"));
+    if (snap.empty) { listDiv.innerHTML = "কোনো মেসেজ নেই।"; return; }
+    
+    const arr = [];
+    snap.forEach(d => arr.push(d.data()));
+    arr.sort((a, b) => (b.lastTime || 0) - (a.lastTime || 0));
+    
+    let html = "";
+    arr.forEach(c => {
+      html += `<div onclick="openAdminChat('${window.esc(c.code)}', '${window.esc(c.name)}')" style="background:#e0f2fe;padding:12px;border-radius:12px;margin-bottom:8px;border-left:4px solid #0ea5e9;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <b>${window.esc(c.name)}</b><br>
+          <small style="color:#666;">${window.esc(c.lastMessage ? c.lastMessage.substring(0, 30) + '...' : '')}</small>
+        </div>
+        <div style="font-size:20px;">💬</div>
+      </div>`;
+    });
+    listDiv.innerHTML = html;
+  } catch (e) { listDiv.innerHTML = "<span style='color:red;'>লোড ব্যর্থ: " + window.esc(e.message) + "</span>"; }
+};
+
+window.listenAdminChat = function (userCode) {
+  if (adminChatUnsubscribe) adminChatUnsubscribe();
+  const chatRef = collection(db, "messages", userCode, "chat");
+  const q = query(chatRef, orderBy("timestamp", "asc"));
+  
+  adminChatUnsubscribe = onSnapshot(q, (snap) => {
+    const msgDiv = document.getElementById("adminChatMessages");
+    msgDiv.innerHTML = "";
+    snap.forEach(d => {
+      const m = d.data();
+      const isAdmin = m.sender === 'admin';
+      msgDiv.innerHTML += `<div class="msg-bubble ${isAdmin ? 'msg-user' : 'msg-admin'}">
+         ${window.esc(m.text)}
+         <div style="font-size:10px; opacity:0.7; text-align:right; margin-top:3px;">${m.timeString}</div>
+      </div>`;
+    });
+    msgDiv.scrollTop = msgDiv.scrollHeight;
+  });
+};
+
+// ========== USERS, NOTES, REPORTS ==========
+window.loadUsersFn = async function () {
+  const search = (document.getElementById('searchUsers')?.value || '').toLowerCase(); const listDiv = document.getElementById('usersList'); listDiv.innerHTML = 'লোড হচ্ছে...';
+  try {
+    const snap = await getDocs(collection(db, 'users')); const arr = []; snap.forEach(d => { const u = d.data(); u.code = d.id; arr.push(u); });
+    const filtered = arr.filter(u => !search || (u.name || '').toLowerCase().includes(search) || (u.code || '').toLowerCase().includes(search));
+    if (filtered.length === 0) { listDiv.innerHTML = "কোনো ইউজার নেই।"; return; }
+    let html = `<p style="font-weight:bold;">মোট: ${filtered.length}</p>`;
+    filtered.forEach(u => { html += `<div style="background:#e0f2fe;padding:10px;border-radius:10px;margin-bottom:8px;border-left:4px solid #0ea5e9;"><b>${window.esc(u.name)}</b><br><small>Code: ${window.esc(u.code)} | ${window.esc(u.class)}-${window.esc(u.group)}</small><br><small style="color:#999;">${window.esc(u.time || '')}</small></div>`; });
+    listDiv.innerHTML = html;
+  } catch (e) { listDiv.innerHTML = "<span style='color:red;'>লোড ব্যর্থ: " + window.esc(e.message) + "</span>"; }
+};
+
+window.loadNotesUserFn = async function () {
+  const body = document.getElementById('otherBody');
+  try {
+    const snap = await getDocs(collection(db, 'notes')); const arr = []; snap.forEach(d => arr.push(d.data()));
+    if (arr.length === 0) { body.innerHTML = "কোনো নোট নেই।"; return; }
+    let html = ''; arr.forEach(n => { html += `<div style="background:#e6fffa;padding:12px;border-radius:12px;margin-bottom:10px;border-left:4px solid #14b8a6;"><b>${window.esc(n.title)}</b><br><a href="${window.esc(n.link)}" target="_blank" rel="noopener" style="color:#0284c7;word-break:break-all;">${window.esc(n.link)}</a></div>`; });
+    body.innerHTML = html;
+  } catch (e) { body.innerHTML = "<p style='color:red;'>লোড ব্যর্থ: " + window.esc(e.message) + "</p>"; }
+};
+
+window.loadNotesAdminFn = async function () {
+  const listDiv = document.getElementById('notesListAdmin'); listDiv.innerHTML = 'লোড হচ্ছে...';
+  try {
+    const snap = await getDocs(collection(db, 'notes')); const arr = []; snap.forEach(d => arr.push({ ...d.data(), _id: d.id }));
+    if (arr.length === 0) { listDiv.innerHTML = "কোনো নোট নেই।"; return; }
+    let html = ''; arr.forEach(n => { html += `<div style="background:#e6fffa;padding:10px;border-radius:10px;margin-bottom:8px;border-left:4px solid #14b8a6;"><b>${window.esc(n.title)}</b><br><a href="${window.esc(n.link)}" target="_blank" rel="noopener" style="color:#0284c7;font-size:12px;word-break:break-all;">${window.esc(n.link)}</a><br><button onclick="deleteNote('${window.esc(n._id)}')" style="margin-top:5px;padding:5px 10px;background:#ef4444;color:white;border:none;border-radius:5px;font-size:12px;">🗑️ ডিলিট</button></div>`; });
+    listDiv.innerHTML = html;
+  } catch (e) { listDiv.innerHTML = "<span style='color:red;'>লোড ব্যর্থ: " + window.esc(e.message) + "</span>"; }
+};
+
+window.addNote = async function () {
+  const title = document.getElementById('noteTitle').value.trim(); const link = document.getElementById('noteLink').value.trim();
+  if (!title || !link) { if (window.showToast) showToast("শিরোনাম ও লিংক দিন!", 'warn'); return; }
+  try {
+    await addDoc(collection(db, 'notes'), { title, link, createdAt: Date.now() });
+    document.getElementById('noteTitle').value = ''; document.getElementById('noteLink').value = '';
+    if (window.showToast) showToast("নোট যোগ হয়েছে ✅", 'success'); window.loadNotesAdminFn();
+  } catch (e) { if (window.showToast) showToast("ব্যর্থ: " + e.message, 'error'); }
+};
+
+window.deleteNote = async function (id) { if (!confirm("ডিলিট করতে চান?")) return; try { await deleteDoc(doc(db, 'notes', id)); window.loadNotesAdminFn(); } catch (e) { console.error(e); } };
+
+window.loadReportsFn = async function () {
+  const listDiv = document.getElementById('reportsList'); listDiv.innerHTML = 'লোড হচ্ছে...';
+  try {
+    const snap = await getDocs(collection(db, 'reports')); const arr = []; snap.forEach(d => arr.push({ ...d.data(), _id: d.id }));
+    if (arr.length === 0) { listDiv.innerHTML = "কোনো রিপোর্ট নেই।"; return; }
+    arr.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    let html = ''; arr.forEach(r => { html += `<div style="background:#fff0f0;padding:12px;border-radius:12px;margin-bottom:10px;border-left:4px solid #ef4444;"><b style="color:#ef4444;">🚩 ${window.esc(r.reason)}</b><br><p style="margin:5px 0;">প্রশ্ন: ${window.esc(r.question)}</p><small style="color:#999;">From: ${window.esc(r.name)} (${window.esc(r.code)}) • ${window.esc(r.time)}</small><br><button onclick="deleteReport('${window.esc(r._id)}')" style="margin-top:6px;padding:5px 10px;background:#ef4444;color:white;border:none;border-radius:5px;font-size:12px;">🗑️ ডিলিট</button></div>`; });
+    listDiv.innerHTML = html;
+  } catch (e) { listDiv.innerHTML = "<span style='color:red;'>লোড ব্যর্থ: " + window.esc(e.message) + "</span>"; }
+};
+
+window.deleteReport = async function (id) { if (!confirm("ডিলিট করতে চান?")) return; try { await deleteDoc(doc(db, 'reports', id)); window.loadReportsFn(); } catch (e) { console.error(e); } };
+
+window.loadLeaderboardFn = async function () {
+  const listDiv = document.getElementById('ldrList'); const cls = document.getElementById('ldrClassFilter').value; const grp = document.getElementById('ldrGroupFilter').value; const filter = document.getElementById('leaderboardFilter').value;
+  listDiv.innerHTML = 'লোড হচ্ছে...';
+  try {
+    const q = query(collection(db, 'results'), where('class', '==', cls), where('group', '==', grp)); const snap = await getDocs(q);
+    const now = Date.now(); let minTime = 0;
+    if (filter === 'week') minTime = now - 7 * 24 * 60 * 60 * 1000; else if (filter === 'month') minTime = now - 30 * 24 * 60 * 60 * 1000;
+    const users = {};
+    snap.forEach(d => {
+      const r = d.data(); if (minTime && (r.timestamp || 0) < minTime) return;
+      const code = (r.code || r.name || '').toUpperCase(); if (!code) return;
+      if (!users[code]) users[code] = { name: r.name, code, pic: r.pic, totalMarks: 0, totalQ: 0, exams: 0 };
+      users[code].totalMarks += r.marks; users[code].totalQ += r.total; users[code].exams++;
+    });
+    const arr = Object.values(users).map(u => ({ ...u, pct: u.totalQ ? Math.round(u.totalMarks / u.totalQ * 100) : 0 })).sort((a, b) => b.pct - a.pct).slice(0, 50);
+    if (arr.length === 0) { listDiv.innerHTML = "<p style='text-align:center;color:#666;'>কোনো রেজাল্ট পাওয়া যায়নি।</p>"; return; }
+    let html = '';
+    arr.forEach((u, i) => {
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : ''; const borderCol = i < 3 ? '#f59e0b' : '#0ea5e9';
+      const avatar = u.pic ? `<img src="${window.esc(u.pic)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<div style="width:40px;height:40px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-size:20px;">👤</div>`;
+      html += `<div style="background:#fff;padding:12px;border-radius:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;border:1px solid #eee;border-left:4px solid ${borderCol};">${avatar}<div style="flex:1;min-width:0;"><div style="font-weight:bold;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${medal} ${window.esc(u.name || 'Unknown')}</div><small style="color:#666;">${u.exams} পরীক্ষা</small></div><div style="text-align:right;"><div style="font-weight:bold;color:#28a745;font-size:18px;">${u.pct}%</div><small style="color:#999;">${u.totalMarks}/${u.totalQ}</small></div></div>`;
+    });
+    listDiv.innerHTML = html;
+  } catch (e) { listDiv.innerHTML = "<p style='color:red;'>লোড ব্যর্থ: " + window.esc(e.message) + "</p>"; }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const saveBtn = document.getElementById('saveBtn'); if (saveBtn) saveBtn.addEventListener('click', () => window.saveQuestionFn());
+  const bulkBtn = document.getElementById('bulkSaveBtn'); if (bulkBtn) bulkBtn.addEventListener('click', () => window.bulkSaveFn());
+  loadAll();
+});
+</script>
+
+<!-- ================= SERVICE WORKER REGISTER ================= -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then(r => console.log('✅ SW registered:', r.scope)).catch(e => console.error('❌ SW failed:', e));
+  });
+}
+</script>
+
+</body>
+</html>

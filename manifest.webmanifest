@@ -1,0 +1,19 @@
+{
+  "name": "Simple Exam App by SOUROV",
+  "short_name": "Exam App",
+  "description": "SSC ও HSC শিক্ষার্থীদের জন্য MCQ পরীক্ষা",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef2ff",
+  "theme_color": "#2563eb",
+  "lang": "bn",
+  "categories": ["education"],
+  "icons": [
+    { "src": "/icon192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
