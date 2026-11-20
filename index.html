@@ -22,6 +22,8 @@
 <style>
   * { -webkit-tap-highlight-color: transparent; }
   
+  body { padding-bottom: 90px; } /* ইনস্টল বাটনের জন্য নিচে জায়গা */
+  
   body.dark-mode { background-color: #121212 !important; color: #ffffff !important; }
   body.dark-mode div:not(.modal-content):not(.chart-container) { background-color: #1e1e1e !important; color: #ffffff !important; border-color: #333 !important; }
   body.dark-mode p, body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode span, body.dark-mode small, body.dark-mode b { color: #ffffff !important; }
@@ -31,14 +33,15 @@
   body.dark-mode .notice-container { background-color: #2d2d2d !important; color: #f59e0b !important; }
   
   /* স্মুথ UI/UX এনিমেশন */
-  button { transition: transform 0.15s ease, filter 0.2s ease, background-color 0.2s ease; }
-  button:active { transform: scale(0.95); filter: brightness(0.9); }
+  button { transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), filter 0.2s ease, background-color 0.2s ease; }
+  button:active { transform: scale(0.94); filter: brightness(0.85); }
   
-  input:focus, select:focus, textarea:focus { outline: none; border-color: #2563eb !important; box-shadow: 0 0 6px rgba(37,99,235,0.4) !important; }
+  input, select, textarea { transition: all 0.2s ease; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: #2563eb !important; box-shadow: 0 0 8px rgba(37,99,235,0.3) !important; }
   
   .page-screen { display: none; }
-  .active-page { display: block; animation: fadeIn 0.3s ease-out; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .active-page { display: block; animation: fadeIn 0.35s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   
   .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
   .modal-content { background: white; padding: 20px; border-radius: 20px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -54,22 +57,42 @@
   .chat-input-area { display: flex; gap: 8px; padding: 10px; background: white; border-top: 1px solid #ddd; }
   body.dark-mode .chat-input-area { background: #1e1e1e; border-color: #444; }
   
-  /* PWA Install Button Style */
-  #pwaInstallBtn { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #2563eb, #4a00e0); color: white; border: none; padding: 12px 24px; border-radius: 30px; font-size: 16px; font-weight: bold; box-shadow: 0 8px 16px rgba(37,99,235,0.4); z-index: 9999; cursor: pointer; animation: floatUp 0.5s ease; }
+  /* পার্মানেন্ট ইনস্টল বাটন */
+  #pwaInstallBtn { 
+    display: flex; 
+    position: fixed; 
+    bottom: 20px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    background: linear-gradient(135deg, #2563eb, #4a00e0); 
+    color: white; 
+    border: none; 
+    padding: 14px 28px; 
+    border-radius: 30px; 
+    font-size: 16px; 
+    font-weight: bold; 
+    box-shadow: 0 8px 20px rgba(37,99,235,0.4); 
+    z-index: 9999; 
+    cursor: pointer; 
+    align-items: center; 
+    gap: 8px;
+    animation: floatUp 0.5s ease; 
+    transition: all 0.2s ease;
+  }
   @keyframes floatUp { from { bottom: -50px; opacity: 0; } to { bottom: 20px; opacity: 1; } }
 
   .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
   .admin-btn { padding: 12px 5px; border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 14px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
   .notice-container { background: #fef08a; padding: 12px; border-radius: 12px; margin-bottom: 12px; border-left: 5px solid #d97706; max-height: 100px; overflow-y: auto; white-space: pre-wrap; color: #b45309; font-weight: bold; font-size: 14px;}
   .search-box { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); padding:12px 20px; border-radius:8px; z-index:10000; color:#fff; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,.25); max-width:90%; text-align:center; animation:toastIn .3s ease; }
-  @keyframes toastIn { from { bottom:-50px; opacity:0; } to { bottom:20px; opacity:1; } }
+  .toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%); padding:12px 20px; border-radius:8px; z-index:10000; color:#fff; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,.25); max-width:90%; text-align:center; animation:toastIn .3s ease; }
+  @keyframes toastIn { from { bottom:0px; opacity:0; } to { bottom:90px; opacity:1; } }
 </style>
 </head>
 <body style="font-family:sans-serif;background:#eef2ff;padding:0;margin:0;min-height:100vh">
 
-<!-- PWA Install Button -->
-<button id="pwaInstallBtn" onclick="installPWA()">📥 অ্যাপটি ইনস্টল করুন</button>
+<!-- পার্মানেন্ট ইনস্টল / আপডেট বাটন -->
+<button id="pwaInstallBtn" onclick="installPWA()">📥 Install / Update App</button>
 
 <div style="background:#2563eb;padding:16px 12px 20px;text-align:center;color:white;border-radius:0 0 20px 20px; position: relative;">
   <div style="position: absolute; left: 15px; top: 15px;">
@@ -502,31 +525,69 @@
 </div>
 
 <script>
-// ========== PWA INSTALL PROMPT ==========
+// ========== PWA SMART INSTALL & UPDATE LOGIC ==========
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  document.getElementById('pwaInstallBtn').style.display = 'block';
 });
-
-window.installPWA = async function () {
-  if (!deferredPrompt) {
-    if (window.showToast) showToast("আপনার ব্রাউজার ইনস্টল সাপোর্ট করছে না। ব্রাউজার মেনু থেকে 'Add to Home screen' চেষ্টা করুন।", 'warn', 4000);
-    return;
-  }
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  if (outcome === 'accepted') {
-    document.getElementById('pwaInstallBtn').style.display = 'none';
-    if (window.showToast) showToast("অ্যাপ ইনস্টল হচ্ছে... ✅", 'success');
-  }
-  deferredPrompt = null;
-};
 
 window.addEventListener('appinstalled', () => {
-  document.getElementById('pwaInstallBtn').style.display = 'none';
+  deferredPrompt = null;
+  if (window.showToast) showToast("অ্যাপটি সফলভাবে ইনস্টল হয়েছে! 🎉", 'success');
 });
+
+// সার্ভিস ওয়ার্কার আপডেটের পর অটোমেটিক রিলোড
+let refreshing = false;
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
+  });
+}
+
+async function installPWA() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+  if (isStandalone) {
+    // অ্যাপ আগে থেকেই ইনস্টল করা আছে -> আপডেট চেক করবে
+    if (window.showToast) showToast("আপডেট চেক করা হচ্ছে...", 'info');
+    try {
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg) {
+          await reg.update(); // ফোর্স আপডেট চেক
+          setTimeout(() => {
+            if (reg.waiting || reg.installing) {
+              if (window.showToast) showToast("নতুন আপডেট পাওয়া গেছে! আপডেট হচ্ছে...", 'success');
+              if (reg.waiting) reg.waiting.postMessage({ action: 'SKIP_WAITING' });
+              // controllerchange ইভেন্ট রিলোড করবে
+            } else {
+              if (window.showToast) showToast("Your App is Already Updated ✅", 'info', 3000);
+            }
+          }, 1500);
+          return;
+        }
+      }
+    } catch (e) { console.error(e); }
+    if (window.showToast) showToast("Your App is Already Updated ✅", 'info', 3000);
+  } else {
+    // অ্যাপ ইনস্টল করা নেই -> ইনস্টল প্রম্পট দেখাবে
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        if (window.showToast) showToast("অ্যাপ ইনস্টল হচ্ছে... ✅", 'success');
+      }
+      deferredPrompt = null;
+    } else {
+      if (window.showToast) showToast("ব্রাউজারের ৩টি ডট (⋮) মেনু থেকে 'Install app' এ ক্লিক করুন।", 'warn', 5000);
+    }
+  }
+}
+window.installPWA = installPWA;
 
 // ========== SOUND ENGINE ==========
 let audioCtx = null;
