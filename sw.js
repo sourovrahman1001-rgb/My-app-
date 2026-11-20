@@ -1,4 +1,4 @@
-const CACHE = 'exam-app-v30';
+const CACHE = 'exam-app-v31';
 const APP_SHELL = [
   './',
   './index.html',

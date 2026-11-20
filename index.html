@@ -20,6 +20,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 
 <style>
+  * { -webkit-tap-highlight-color: transparent; }
+  
   body.dark-mode { background-color: #121212 !important; color: #ffffff !important; }
   body.dark-mode div:not(.modal-content):not(.chart-container) { background-color: #1e1e1e !important; color: #ffffff !important; border-color: #333 !important; }
   body.dark-mode p, body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode span, body.dark-mode small, body.dark-mode b { color: #ffffff !important; }
@@ -28,29 +30,46 @@
   body.dark-mode a { color: #60a5fa !important; }
   body.dark-mode .notice-container { background-color: #2d2d2d !important; color: #f59e0b !important; }
   
+  /* স্মুথ UI/UX এনিমেশন */
+  button { transition: transform 0.15s ease, filter 0.2s ease, background-color 0.2s ease; }
+  button:active { transform: scale(0.95); filter: brightness(0.9); }
+  
+  input:focus, select:focus, textarea:focus { outline: none; border-color: #2563eb !important; box-shadow: 0 0 6px rgba(37,99,235,0.4) !important; }
+  
+  .page-screen { display: none; }
+  .active-page { display: block; animation: fadeIn 0.3s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+  .modal-content { background: white; padding: 20px; border-radius: 20px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
   /* চ্যাট স্টাইল */
   .chat-container { display: flex; flex-direction: column; height: 65vh; background: #f8f9ff; border-radius: 12px; overflow: hidden; border: 1px solid #ddd; }
   .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-  .msg-bubble { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
+  .msg-bubble { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; line-height: 1.4; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
   .msg-user { align-self: flex-end; background: #2563eb; color: white; border-bottom-right-radius: 2px; }
   .msg-admin { align-self: flex-start; background: #e2e8f0; color: #333; border-bottom-left-radius: 2px; }
   body.dark-mode .msg-admin { background: #334155; color: white; }
   .chat-input-area { display: flex; gap: 8px; padding: 10px; background: white; border-top: 1px solid #ddd; }
   body.dark-mode .chat-input-area { background: #1e1e1e; border-color: #444; }
   
+  /* PWA Install Button Style */
+  #pwaInstallBtn { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #2563eb, #4a00e0); color: white; border: none; padding: 12px 24px; border-radius: 30px; font-size: 16px; font-weight: bold; box-shadow: 0 8px 16px rgba(37,99,235,0.4); z-index: 9999; cursor: pointer; animation: floatUp 0.5s ease; }
+  @keyframes floatUp { from { bottom: -50px; opacity: 0; } to { bottom: 20px; opacity: 1; } }
+
   .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
   .admin-btn { padding: 12px 5px; border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 14px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
-  .page-screen { display: none; }
-  .active-page { display: block; }
-  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
-  .modal-content { background: white; padding: 20px; border-radius: 20px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
   .notice-container { background: #fef08a; padding: 12px; border-radius: 12px; margin-bottom: 12px; border-left: 5px solid #d97706; max-height: 100px; overflow-y: auto; white-space: pre-wrap; color: #b45309; font-weight: bold; font-size: 14px;}
   .search-box { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); padding:12px 20px; border-radius:8px; z-index:9999; color:#fff; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,.25); max-width:90%; text-align:center; animation:toastIn .3s ease; }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); padding:12px 20px; border-radius:8px; z-index:10000; color:#fff; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,.25); max-width:90%; text-align:center; animation:toastIn .3s ease; }
   @keyframes toastIn { from { bottom:-50px; opacity:0; } to { bottom:20px; opacity:1; } }
 </style>
 </head>
 <body style="font-family:sans-serif;background:#eef2ff;padding:0;margin:0;min-height:100vh">
+
+<!-- PWA Install Button -->
+<button id="pwaInstallBtn" onclick="installPWA()">📥 অ্যাপটি ইনস্টল করুন</button>
 
 <div style="background:#2563eb;padding:16px 12px 20px;text-align:center;color:white;border-radius:0 0 20px 20px; position: relative;">
   <div style="position: absolute; left: 15px; top: 15px;">
@@ -405,7 +424,6 @@
   
   <div id="pendingBox" style="display:none;"><div id="pendingList"></div></div>
   
-  <!-- Admin Chat System -->
   <div id="messagesBox" style="display:none;">
     <h3 style="color:#0ea5e9; margin-top:0;">💬 চ্যাট বক্স (ইউজার লিস্ট)</h3>
     <div id="adminChatList"></div>
@@ -484,6 +502,32 @@
 </div>
 
 <script>
+// ========== PWA INSTALL PROMPT ==========
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('pwaInstallBtn').style.display = 'block';
+});
+
+window.installPWA = async function () {
+  if (!deferredPrompt) {
+    if (window.showToast) showToast("আপনার ব্রাউজার ইনস্টল সাপোর্ট করছে না। ব্রাউজার মেনু থেকে 'Add to Home screen' চেষ্টা করুন।", 'warn', 4000);
+    return;
+  }
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    document.getElementById('pwaInstallBtn').style.display = 'none';
+    if (window.showToast) showToast("অ্যাপ ইনস্টল হচ্ছে... ✅", 'success');
+  }
+  deferredPrompt = null;
+};
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('pwaInstallBtn').style.display = 'none';
+});
+
 // ========== SOUND ENGINE ==========
 let audioCtx = null;
 let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
@@ -1285,7 +1329,7 @@ function updateStreak() {
   localStorage.setItem("lastExamDate", today); localStorage.setItem("streakCount", streak);
 }
 
-// ========== NEW INFORMATIVE DASHBOARD ==========
+// ========== INFORMATIVE DASHBOARD ==========
 window.loadDashboardFn = function () {
   const arr = JSON.parse(localStorage.getItem("myResults") || "[]");
   const totalExams = arr.length;
@@ -1328,34 +1372,23 @@ window.loadDashboardFn = function () {
   `;
   
   if (totalExams > 0 && window.Chart) {
-    // Doughnut Chart
     const ctx1 = document.getElementById('doughnutChart').getContext('2d');
     new Chart(ctx1, {
       type: 'doughnut',
       data: {
         labels: ['সঠিক', 'ভুল/বাদ'],
-        datasets: [{
-          data: [totalCorrect, wrongCount],
-          backgroundColor: ['#10b981', '#ef4444'],
-          borderWidth: 0
-        }]
+        datasets: [{ data: [totalCorrect, wrongCount], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0 }]
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
     
-    // Trend Chart
     const last6 = arr.slice(-6);
     const ctx2 = document.getElementById('trendChart').getContext('2d');
     new Chart(ctx2, {
       type: 'bar',
       data: {
         labels: last6.map((_, i) => 'পরীক্ষা ' + (arr.length - last6.length + i + 1)),
-        datasets: [{
-          label: 'Score (%)',
-          data: last6.map(r => Math.round((r.marks / r.total) * 100)),
-          backgroundColor: '#3b82f6',
-          borderRadius: 6
-        }]
+        datasets: [{ label: 'Score (%)', data: last6.map(r => Math.round((r.marks / r.total) * 100)), backgroundColor: '#3b82f6', borderRadius: 6 }]
       },
       options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
     });
@@ -1648,22 +1681,10 @@ window.sendChatMsgToDb = async function (userCode, text, sender) {
   try {
     const chatRef = doc(db, "messages", userCode);
     const msgData = { text, sender, timestamp: Date.now(), timeString: new Date().toLocaleTimeString('bn-BD', {hour: '2-digit', minute:'2-digit'}) };
-    
-    // Subcollection-এ মেসেজ সেভ করা
     await addDoc(collection(chatRef, "chat"), msgData);
-    
-    // মূল ডকুমেন্ট আপডেট করা (লিস্ট দেখানোর জন্য)
     const userSnap = await getDoc(doc(db, "users", userCode));
     const userName = userSnap.exists() ? userSnap.data().name : userCode;
-    
-    await setDoc(chatRef, {
-      lastMessage: text,
-      lastTime: msgData.timestamp,
-      name: userName,
-      code: userCode,
-      sender: sender
-    }, { merge: true });
-    
+    await setDoc(chatRef, { lastMessage: text, lastTime: msgData.timestamp, name: userName, code: userCode, sender: sender }, { merge: true });
   } catch (e) { console.error("Chat error:", e); if(window.showToast) showToast("মেসেজ পাঠাতে সমস্যা", 'error'); }
 };
 
@@ -1671,42 +1692,27 @@ window.listenUserChat = function (userCode) {
   if (userChatUnsubscribe) userChatUnsubscribe();
   const chatRef = collection(db, "messages", userCode, "chat");
   const q = query(chatRef, orderBy("timestamp", "asc"));
-  
   userChatUnsubscribe = onSnapshot(q, (snap) => {
     const msgDiv = document.getElementById("userChatMessages");
     msgDiv.innerHTML = "";
     snap.forEach(d => {
       const m = d.data();
       const isMe = m.sender === 'user';
-      msgDiv.innerHTML += `<div class="msg-bubble ${isMe ? 'msg-user' : 'msg-admin'}">
-         ${window.esc(m.text)}
-         <div style="font-size:10px; opacity:0.7; text-align:right; margin-top:3px;">${m.timeString}</div>
-      </div>`;
+      msgDiv.innerHTML += `<div class="msg-bubble ${isMe ? 'msg-user' : 'msg-admin'}">${window.esc(m.text)}<div style="font-size:10px; opacity:0.7; text-align:right; margin-top:3px;">${m.timeString}</div></div>`;
     });
     msgDiv.scrollTop = msgDiv.scrollHeight;
   });
 };
 
 window.loadAdminChatList = async function () {
-  const listDiv = document.getElementById("adminChatList");
-  listDiv.innerHTML = "লোড হচ্ছে...";
+  const listDiv = document.getElementById("adminChatList"); listDiv.innerHTML = "লোড হচ্ছে...";
   try {
     const snap = await getDocs(collection(db, "messages"));
     if (snap.empty) { listDiv.innerHTML = "কোনো মেসেজ নেই।"; return; }
-    
-    const arr = [];
-    snap.forEach(d => arr.push(d.data()));
-    arr.sort((a, b) => (b.lastTime || 0) - (a.lastTime || 0));
-    
+    const arr = []; snap.forEach(d => arr.push(d.data())); arr.sort((a, b) => (b.lastTime || 0) - (a.lastTime || 0));
     let html = "";
     arr.forEach(c => {
-      html += `<div onclick="openAdminChat('${window.esc(c.code)}', '${window.esc(c.name)}')" style="background:#e0f2fe;padding:12px;border-radius:12px;margin-bottom:8px;border-left:4px solid #0ea5e9;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <b>${window.esc(c.name)}</b><br>
-          <small style="color:#666;">${window.esc(c.lastMessage ? c.lastMessage.substring(0, 30) + '...' : '')}</small>
-        </div>
-        <div style="font-size:20px;">💬</div>
-      </div>`;
+      html += `<div onclick="openAdminChat('${window.esc(c.code)}', '${window.esc(c.name)}')" style="background:#e0f2fe;padding:12px;border-radius:12px;margin-bottom:8px;border-left:4px solid #0ea5e9;cursor:pointer;display:flex;justify-content:space-between;align-items:center;"><div><b>${window.esc(c.name)}</b><br><small style="color:#666;">${window.esc(c.lastMessage ? c.lastMessage.substring(0, 30) + '...' : '')}</small></div><div style="font-size:20px;">💬</div></div>`;
     });
     listDiv.innerHTML = html;
   } catch (e) { listDiv.innerHTML = "<span style='color:red;'>লোড ব্যর্থ: " + window.esc(e.message) + "</span>"; }
@@ -1716,17 +1722,13 @@ window.listenAdminChat = function (userCode) {
   if (adminChatUnsubscribe) adminChatUnsubscribe();
   const chatRef = collection(db, "messages", userCode, "chat");
   const q = query(chatRef, orderBy("timestamp", "asc"));
-  
   adminChatUnsubscribe = onSnapshot(q, (snap) => {
     const msgDiv = document.getElementById("adminChatMessages");
     msgDiv.innerHTML = "";
     snap.forEach(d => {
       const m = d.data();
       const isAdmin = m.sender === 'admin';
-      msgDiv.innerHTML += `<div class="msg-bubble ${isAdmin ? 'msg-user' : 'msg-admin'}">
-         ${window.esc(m.text)}
-         <div style="font-size:10px; opacity:0.7; text-align:right; margin-top:3px;">${m.timeString}</div>
-      </div>`;
+      msgDiv.innerHTML += `<div class="msg-bubble ${isAdmin ? 'msg-user' : 'msg-admin'}">${window.esc(m.text)}<div style="font-size:10px; opacity:0.7; text-align:right; margin-top:3px;">${m.timeString}</div></div>`;
     });
     msgDiv.scrollTop = msgDiv.scrollHeight;
   });
